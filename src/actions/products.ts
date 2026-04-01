@@ -279,8 +279,8 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
     const { error } = await insertProductWithStockFallback(supabase, dbPayload);
     if (error) throw new Error(error.message);
 
-    revalidateTag("products");
-    revalidateTag("categories");
+    revalidateTag("products", "max");
+    revalidateTag("categories", "max");
     return { success: true, message: "Product created." };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Failed to create product" };
@@ -327,9 +327,9 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
     const { error } = await updateProductWithStockFallback(supabase, dbPayload, productId);
     if (error) throw new Error(error.message);
 
-    revalidateTag("products");
-    revalidateTag(`product-${productId}`);
-    revalidateTag(`product-slug-${payload.slug}`);
+    revalidateTag("products", "max");
+    revalidateTag(`product-${productId}`, "max");
+    revalidateTag(`product-slug-${payload.slug}`, "max");
     return { success: true, message: "Product updated." };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Failed to update product" };
@@ -344,8 +344,8 @@ export async function deleteProductAction(productId: string): Promise<ActionResu
     const { error } = await supabase.from("products").delete().eq("id", productId);
     if (error) throw new Error(error.message);
 
-    revalidateTag("products");
-    revalidateTag(`product-${productId}`);
+    revalidateTag("products", "max");
+    revalidateTag(`product-${productId}`, "max");
     return { success: true, message: "Product deleted." };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Failed to delete product" };
@@ -372,7 +372,7 @@ export async function queueImageReprocessAction(productId: string, imageUrls: st
         updated_at: new Date().toISOString(),
       })
       .eq("id", productId);
-    revalidateTag("products");
-    revalidateTag(`product-${productId}`);
+    revalidateTag("products", "max");
+    revalidateTag(`product-${productId}`, "max");
   });
 }

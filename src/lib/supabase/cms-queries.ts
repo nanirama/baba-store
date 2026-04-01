@@ -1,6 +1,6 @@
 import "server-only";
 
-import { unstable_cacheLife as cacheLife, unstable_cacheTag as cacheTag } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { CategoryRecord, ProductRecord } from "@/types/cms";
 

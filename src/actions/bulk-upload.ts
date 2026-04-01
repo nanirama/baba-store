@@ -477,7 +477,7 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
       }).length;
     }
 
-    revalidateTag("products");
+    revalidateTag("products", "max");
 
     const imported = insertedRows.length;
     const toStorage = imagesUploaded - imagesKeptOriginal;

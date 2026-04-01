@@ -160,8 +160,8 @@ export async function processCategoriesBulkUploadAction(formData: FormData): Pro
     const { error } = await supabase.from("categories").upsert(deduped.rows, { onConflict: "slug" });
     if (error) throw new Error(error.message);
 
-    revalidateTag("categories");
-    revalidateTag("products");
+    revalidateTag("categories", "max");
+    revalidateTag("products", "max");
 
     return {
       success: true,

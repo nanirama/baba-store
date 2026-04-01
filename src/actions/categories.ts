@@ -115,7 +115,7 @@ export async function createCategoryAction(formData: FormData): Promise<ActionRe
   });
 
   if (error) return { success: false, message: error.message };
-  revalidateTag("categories");
+  revalidateTag("categories", "max");
   return { success: true, message: "Category created" };
 }
 
@@ -178,8 +178,8 @@ export async function updateCategoryAction(formData: FormData): Promise<ActionRe
     .eq("id", id);
 
   if (error) return { success: false, message: error.message };
-  revalidateTag("categories");
-  revalidateTag("products");
+  revalidateTag("categories", "max");
+  revalidateTag("products", "max");
   return { success: true, message: "Category updated" };
 }
 
@@ -200,7 +200,7 @@ export async function deleteCategoryAction(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) return { success: false, message: error.message };
 
-  revalidateTag("categories");
-  revalidateTag("products");
+  revalidateTag("categories", "max");
+  revalidateTag("products", "max");
   return { success: true, message: "Category deleted" };
 }

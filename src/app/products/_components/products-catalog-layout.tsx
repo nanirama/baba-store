@@ -1,0 +1,68 @@
+import { BaseLayout } from "@/components/Common/BaseLayout";
+import { ProductCard } from "@/components/store/product-card";
+import { ProductsCategorySidebar } from "@/components/store/products-category-sidebar";
+import { ProductsPagination } from "@/components/store/products-pagination";
+import { ProductsToolbar } from "@/components/store/products-toolbar";
+import type { ProductsListingResult } from "@/lib/supabase/products-listing";
+import type { ProductsListingLinkState } from "@/lib/utils/products-listing-url";
+
+type ProductsCatalogLayoutProps = {
+  title: string;
+  listing: ProductsListingResult;
+  linkState: ProductsListingLinkState;
+  totalPages: number;
+  /** Sidebar: `/products/{categorySlug}` */
+  categorySlug?: string;
+  /** Sidebar: `/products/{categorySlug}/{childSlug}` */
+  childSlug?: string;
+};
+
+export function ProductsCatalogLayout({
+  title,
+  listing,
+  linkState,
+  totalPages,
+  categorySlug,
+  childSlug,
+}: ProductsCatalogLayoutProps) {
+  return (
+    <BaseLayout>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <header className="mb-8 lg:mb-10">
+          <div className="flex flex-wrap items-end gap-0">
+            <h1 className="border-b-4 border-primary pb-2 font-[family-name:var(--font-heading)] text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl lg:text-4xl">
+              {title}
+            </h1>
+            <div className="h-px min-w-[4rem] flex-1 bg-gray-200" aria-hidden />
+          </div>
+        </header>
+
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+          <ProductsCategorySidebar categorySlug={categorySlug} childSlug={childSlug} />
+          <div className="min-w-0 flex-1">
+            <ProductsToolbar state={linkState} />
+            {listing.total === 0 ? (
+              <p className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center text-gray-600">
+                {linkState.q || linkState.category ? "პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის დამატებული."}
+              </p>
+            ) : (
+              <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {listing.products.map((p) => (
+                  <li key={p.id}>
+                    <ProductCard product={p} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <ProductsPagination
+              state={linkState}
+              total={listing.total}
+              perPage={listing.perPage}
+              totalPages={totalPages}
+            />
+          </div>
+        </div>
+      </div>
+    </BaseLayout>
+  );
+}

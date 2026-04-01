@@ -136,3 +136,12 @@
 }
 
 .page_ttl:after {width: 100%; height: 1px; background-color: #E2E2E2; content: ""; position: absolute; left: 0; bottom: 24px;}
+
+/* global.css */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}

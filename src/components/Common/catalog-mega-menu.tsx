@@ -37,7 +37,7 @@ function CategoryGlyph({ iconUrl, className }: { iconUrl: string | null; classNa
     );
   }
   return (
-    <Package className={cn("h-6 w-6 shrink-0 text-primary", className)} aria-hidden />
+    <Package className={cn("h-4 w-4 shrink-0 text-primary", className)} aria-hidden />
   );
 }
 
@@ -99,14 +99,14 @@ export function CatalogMegaMenu({ parents }: CatalogMegaMenuProps) {
     <div ref={rootRef} className="relative z-40 min-w-0 shrink-0">
       <button
         type="button"
-        className="flex items-center gap-1.5 rounded-md py-2 text-primary outline-none ring-offset-2 transition-colors hover:text-primary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        className="flex items-center  gap-1.5 rounded-md py-2 text-primary outline-none ring-offset-2 transition-colors hover:text-primary/90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
       >
         <Grid3x3 className="h-5 w-5 shrink-0" aria-hidden />
-        <span className="text-sm font-semibold tracking-tight sm:text-base">კატალოგი</span>
+        <span className="text-[15px] font-medium tracking-tight ">კატალოგი</span>
         <ChevronDown
           className={cn(
             "h-4 w-4 shrink-0 transition-transform duration-200",
@@ -128,7 +128,7 @@ export function CatalogMegaMenu({ parents }: CatalogMegaMenuProps) {
             role="dialog"
             aria-label="პროდუქტების კატალოგი"
             className={cn(
-              "fixed inset-x-0 bottom-0 top-24 z-[70] flex max-h-[min(85dvh,calc(100vh-6rem))] flex-col overflow-hidden rounded-t-2xl border border-orange-100 bg-white shadow-2xl animate-mega-in lg:absolute lg:inset-auto lg:left-0 lg:top-full lg:mt-2 lg:h-[min(28rem,calc(100vh-8rem))] lg:max-h-none lg:w-[min(calc(100vw-2rem),44rem)] lg:rounded-xl lg:shadow-xl"
+              "fixed inset-x-0 bottom-0 top-24 z-[70] flex max-h-[min(85dvh,calc(100vh-6rem))] flex-col overflow-hidden rounded-t-2xl border border-orange-100 bg-white shadow-2xl animate-mega-in lg:absolute lg:inset-auto lg:left-0 lg:top-full lg:mt-2 lg:h-[min(28rem,calc(100vh-8rem))] lg:max-h-none lg:w-[min(calc(100vw-2rem),26rem)] lg:rounded-xl lg:shadow-xl"
             )}
           >
             <div className="flex items-center justify-between border-b border-orange-100 px-4 py-3 lg:hidden">
@@ -158,7 +158,7 @@ export function CatalogMegaMenu({ parents }: CatalogMegaMenuProps) {
               <>
                 <div className="hidden min-h-0 flex-1 lg:grid lg:min-h-[18rem] lg:grid-cols-2 lg:divide-x lg:divide-orange-100">
                   <nav
-                    className="flex min-h-0 flex-col overflow-y-auto border-b border-orange-100 lg:border-b-0"
+                    className="flex min-h-0 flex-col overflow-y-auto no-scrollbar border-b border-orange-100 lg:border-b-0"
                     aria-label="ძირითადი კატეგორიები"
                   >
                     {/* <Link
@@ -172,34 +172,37 @@ export function CatalogMegaMenu({ parents }: CatalogMegaMenuProps) {
                     </Link> */}
                     {parents.map((p) => {
                       const href = parentCategoryHref(p.slug);
-                      return(
-                      <button
-                        key={p.id}
-                        type="button"
-                        className={cn(
-                          "flex w-full items-center gap-1 border-b border-orange-100 px-4 py-1 text-left text-sm font-semibold text-primary transition-colors hover:bg-orange-50/90 focus-visible:bg-orange-50 focus-visible:outline-none",
-                          activeParentId === p.id && "bg-orange-50"
-                        )}
-                        onMouseEnter={() => setActiveParentId(p.id)}
-                        onFocus={() => setActiveParentId(p.id)}
-                      >
-                        <CategoryGlyph iconUrl={p.icon} />
-                        <Link
-          href={href ?? '#'}
-          className={cn(
-            "rounded-md px-3 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            
-          )}
-        >{p.name}</Link>
-                        {/* <span className="min-w-0 flex-1 truncate">{p.name}222</span> */}
-                        <ChevronRight className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-                      </button>
-                    )})}
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={cn(
+                            "flex w-full items-center gap-1 border-b border-[#ff5607] px-2 py-0 text-left text-[15px] justify-between font-normal hover:font-semibold hover:bg-transparent text-primary transition-colors focus-visible:bg-orange-50 focus-visible:outline-none",
+                            activeParentId === p.id && "bg-orange-50"
+                          )}
+                          onMouseEnter={() => setActiveParentId(p.id)}
+                          onFocus={() => setActiveParentId(p.id)}
+                        >
+                          <div className="flex flex-row gap-0 items-center">
+                            <CategoryGlyph iconUrl={p.icon} />
+                            <Link
+                              href={href ?? '#'}
+                              className={cn(
+                                "rounded-md px-3 py-1.5 text-[15px] font-normal hover:font-semibold text-primary transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+
+                              )}
+                            >{p.name}</Link>
+                          </div>
+                          {/* <span className="min-w-0 flex-1 truncate">{p.name}222</span> */}
+                          <ChevronRight className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+                        </button>
+                      )
+                    })}
                   </nav>
 
                   <div
                     key={activeParent?.id ?? "none"}
-                    className="hidden min-h-0 flex-col overflow-y-auto bg-white p-1 animate-mega-panel lg:flex"
+                    className="hidden min-h-0 flex-col overflow-y-auto no-scrollbar bg-white p-1 animate-mega-panel lg:flex"
                   >
                     {activeParent ? (
                       <SubcategoryPanel parent={activeParent} onNavigate={close} />
@@ -208,7 +211,7 @@ export function CatalogMegaMenu({ parents }: CatalogMegaMenuProps) {
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:hidden">
-                  
+
                   {parents.map((p) => (
                     <details
                       key={p.id}
@@ -254,7 +257,7 @@ function SubcategoryPanel({
         <Link
           href={href}
           className={cn(
-            "rounded-md px-3 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            "rounded-md px-3 py-2.5 text-[15px] font-normal text-primary transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             !nested && "border border-orange-100"
           )}
           onClick={onNavigate}
@@ -268,7 +271,7 @@ function SubcategoryPanel({
   return (
     <ul
       className={cn(
-        "flex flex-col divide-y divide-orange-200",
+        "flex flex-col divide-y divide-[#ff5607]",
         nested ? "py-1" : "py-2"
       )}
     >
@@ -286,7 +289,7 @@ function SubcategoryPanel({
         <li key={c.id}>
           <Link
             href={childCategoryHref(parent.slug, c.slug)}
-            className="block px-3 py-3 text-sm font-medium text-primary transition-colors hover:bg-orange-50 focus-visible:bg-orange-50 focus-visible:outline-none"
+            className="block px-3 py-1.5 text-sm font-normal hover:font-semibold text-primary transition-colors hover:bg-transparent focus-visible:bg-orange-50 focus-visible:outline-none"
             onClick={onNavigate}
           >
             {c.name}

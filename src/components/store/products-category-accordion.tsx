@@ -104,23 +104,23 @@ function SidebarParent({
 
   return (
     <div className="border-b border-gray-200 bg-white">
-      <div className="flex items-center gap-2 py-1.5 pr-1">
+      <div className="flex items-center gap-2 py-1.5 pr-1 group">
 
         <Link
           href={parentHref}
           className={cn(
-            "flex min-w-0 flex-1 items-center gap-3 py-2 transition-colors hover:opacity-90",
+            "flex min-w-0 flex-1 items-center gap-3 py-2 transition-colors hover:opacity-90 ",
             showParentActiveStyle && "rounded-md bg-orange-50/50 px-1"
           )}
         >
           <CategoryGlyph iconUrl={parent.icon} />
-          <span className="text-left text-sm font-semibold text-gray-900">{parent.name}</span>
+          <span className="text-left text-sm font-normal text-[#333333] group-hover:text-[#ff5607]">{parent.name}</span>
         </Link>
         <button
           type="button"
           className={cn(
-            "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-gray-600 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            open ? "border-primary bg-primary text-white" : "border-gray-300"
+            "flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border text-[#333] group-hover:text-[#ff5607] transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            open ? "border-primary bg-primary text-white group-hover:border-[#ff5607]" : "border-[#333] group-hover:border-[#ff5607]"
           )}
           aria-expanded={open}
           aria-controls={panelId}

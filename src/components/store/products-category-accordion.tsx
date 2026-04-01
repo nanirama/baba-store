@@ -7,6 +7,7 @@ import { useEffect, useId, useState } from "react";
 import { cn } from "@/lib/utils";
 import { isSafeImageUrlForAttr } from "@/lib/utils/safe-image-url";
 import type { CatalogCategoryParent } from "@/types/catalog-menu";
+import { childCategoryHref, parentCategoryHref } from "@/lib/utils/category-href";
 
 function CategoryGlyph({ iconUrl }: { iconUrl: string | null }) {
   const t = iconUrl?.trim() ?? "";
@@ -43,21 +44,30 @@ export function ProductsCategoryAccordion({
   parents,
   categorySlug,
   childSlug,
+  linkMode = "products",
 }: {
   parents: CatalogCategoryParent[];
   /** Top-level category slug (`/products/{categorySlug}`). */
   categorySlug?: string;
   /** Subcategory slug (`/products/{categorySlug}/{childSlug}`). */
   childSlug?: string;
+  /** `root` → `/{slug}` storefront URLs; `products` → `/products/{slug}`. */
+  linkMode?: "products" | "root";
 }) {
   return (
     <nav className="px-2 py-4 sm:px-3 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
-      <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+      {/* <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
         კატეგორიები
-      </p>
+      </p> */}
       <div className="flex flex-col">
         {parents.map((p) => (
-          <SidebarParent key={p.id} parent={p} categorySlug={categorySlug} childSlug={childSlug} />
+          <SidebarParent
+            key={p.id}
+            parent={p}
+            categorySlug={categorySlug}
+            childSlug={childSlug}
+            linkMode={linkMode}
+          />
         ))}
       </div>
     </nav>
@@ -68,14 +78,19 @@ function SidebarParent({
   parent,
   categorySlug,
   childSlug,
+  linkMode,
 }: {
   parent: CatalogCategoryParent;
   categorySlug?: string;
   childSlug?: string;
+  linkMode: "products" | "root";
 }) {
   const baseId = useId();
   const panelId = `${baseId}-subcategories`;
-  const parentHref = `/products/${encodeURIComponent(parent.slug)}`;
+  const parentHref =
+    linkMode === "root"
+      ? parentCategoryHref(parent.slug)
+      : `/products/${encodeURIComponent(parent.slug)}`;
   const isOpenTarget = parentRowIsOpen(parent, categorySlug, childSlug);
 
   const [open, setOpen] = useState(isOpenTarget);
@@ -142,16 +157,19 @@ function SidebarParent({
         hidden={!open}
         className="border-t border-gray-100 bg-gray-50/90 px-2 py-2"
       >
-        <Link
+        {/* <Link
           href={parentHref}
           className={`mb-2 block rounded-md px-3 py-2 text-sm font-semibold text-primary hover:bg-orange-50 ${parentOnlyActive ? "bg-orange-50" : ""
             }`}
         >
           ყველა — {parent.name}
-        </Link>
+        </Link> */}
         <ul className="space-y-0.5 border-l border-gray-200 pl-3">
           {parent.children.map((c) => {
-            const childHref = `/products/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
+            const childHref =
+              linkMode === "root"
+                ? childCategoryHref(parent.slug, c.slug)
+                : `/products/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
             const childActive = categorySlug === parent.slug && childSlug === c.slug;
             return (
               <li key={c.id}>

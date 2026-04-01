@@ -53,7 +53,31 @@ export function sanitizeSearchQuery(q: string | undefined): string | undefined {
   return t.length > 0 ? t : undefined;
 }
 
-/** `products.category_id` / `subcategory_id` reference `categories.id` (uuid), not `categories.category_id` (int). */
+/** Next.js `searchParams` raw shape (string or string[]). */
+export type ProductsListingRawSearchParams = Record<string, string | string[] | undefined>;
+
+export function firstSearchParam(value: string | string[] | undefined): string | undefined {
+  if (value == null) return undefined;
+  return Array.isArray(value) ? value[0] : value;
+}
+
+/** Shared `q` / `sort` / `per` / `page` / `category` parsing for all catalog routes. */
+export function parseListingSearchParams(sp: ProductsListingRawSearchParams) {
+  return {
+    q: sanitizeSearchQuery(firstSearchParam(sp.q)),
+    sort: parseProductSort(firstSearchParam(sp.sort)),
+    per: parsePerPage(firstSearchParam(sp.per)),
+    page: parsePageIndex(firstSearchParam(sp.page)),
+    /** `/products?category=` — pass to `getProductsListing` and `linkState.category`. */
+    category: firstSearchParam(sp.category),
+  };
+}
+
+/**
+ * `/products?category=` filter: matches `products.category_id` / `subcategory_id` against `categories.id` (uuid).
+ * Bulk import and parent segment pages use numeric `categories.category_id` on `products.category_id` instead;
+ * see `getStorefrontProductsListingByCategoryNumericId`.
+ */
 type CategoryFilterMode = { kind: "none" } | { kind: "ids"; ids: string[] };
 
 async function resolveCategoryFilter(categorySlug: string | undefined): Promise<CategoryFilterMode> {
@@ -123,6 +147,10 @@ export type ProductsListingResult = {
   perPage: 25 | 50 | 100 | 200 | 500;
 };
 
+export function emptyProductsListing(perPage: 25 | 50 | 100 | 200 | 500): ProductsListingResult {
+  return { products: [], total: 0, page: 1, perPage };
+}
+
 export async function getProductsListing(args: {
   q?: string;
   categorySlug?: string;
@@ -156,6 +184,108 @@ export async function getProductsListing(args: {
   let dataQuery = applyFiltersToQuery(supabase.from("products").select("*"), category, ilikeTerm);
 
   /* Secondary `id` order guarantees stable pages (no gaps/duplicates when sort keys tie or are null). */
+  switch (args.sort) {
+    case "name_asc":
+      dataQuery = dataQuery.order("name", { ascending: true }).order("id", { ascending: true });
+      break;
+    case "name_desc":
+      dataQuery = dataQuery.order("name", { ascending: false }).order("id", { ascending: true });
+      break;
+    case "price_asc":
+      dataQuery = dataQuery.order("price", { ascending: true }).order("id", { ascending: true });
+      break;
+    case "price_desc":
+      dataQuery = dataQuery.order("price", { ascending: false }).order("id", { ascending: true });
+      break;
+    case "model_asc":
+      dataQuery = dataQuery
+        .order("model", { ascending: true })
+        .order("name", { ascending: true })
+        .order("id", { ascending: true });
+      break;
+    case "model_desc":
+      dataQuery = dataQuery
+        .order("model", { ascending: false })
+        .order("name", { ascending: true })
+        .order("id", { ascending: true });
+      break;
+    case "rating_asc":
+      dataQuery = dataQuery.order("created_at", { ascending: true }).order("id", { ascending: true });
+      break;
+    case "rating_desc":
+      dataQuery = dataQuery.order("created_at", { ascending: false }).order("id", { ascending: true });
+      break;
+    default:
+      dataQuery = dataQuery.order("created_at", { ascending: false }).order("id", { ascending: true });
+  }
+
+  const from = (page - 1) * args.perPage;
+  const to = from + args.perPage - 1;
+  dataQuery = dataQuery.range(from, to);
+
+  const { data, error } = await dataQuery;
+
+  if (error) {
+    throw new Error(error.message || `products listing query failed: ${JSON.stringify(error)}`);
+  }
+
+  return {
+    products: (data ?? []) as ProductRecord[],
+    total,
+    page,
+    perPage: args.perPage,
+  };
+}
+
+/**
+ * Storefront parent category page (`/{parentSlug}`): `products.category_id` is the numeric
+ * `categories.category_id` (bulk import), not `categories.id` (uuid).
+ */
+export async function getStorefrontProductsListingByCategoryNumericId(args: {
+  categoryId: number;
+  q?: string;
+  sort: ProductSortKey;
+  page: number;
+  perPage: 25 | 50 | 100 | 200 | 500;
+}): Promise<ProductsListingResult> {
+  noStore();
+  const categoryId = Number(args.categoryId);
+  if (!Number.isFinite(categoryId) || categoryId <= 0) {
+    return { products: [], total: 0, page: 1, perPage: args.perPage };
+  }
+
+  const supabase = createAdminClient();
+  const termRaw = sanitizeSearchQuery(args.q);
+  const ilikeTerm = termRaw ? sanitizeIlikeTerm(termRaw) : "";
+
+  function applyListingFilters(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    query: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any {
+    let q = query.eq("category_id", categoryId).eq("status", "active");
+    if (ilikeTerm.length > 0) {
+      q = q.ilike("name", `%${ilikeTerm}%`);
+    }
+    return q;
+  }
+
+  const countQuery = applyListingFilters(
+    supabase.from("products").select("id", { count: "exact", head: true })
+  );
+
+  const { count: totalCount, error: countError } = await countQuery;
+
+  if (countError) {
+    throw new Error(countError.message || `products count query failed: ${JSON.stringify(countError)}`);
+  }
+
+  const total = totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / args.perPage));
+  const page = Math.min(Math.max(1, args.page), totalPages);
+
+  let dataQuery = applyListingFilters(supabase.from("products").select("*"));
+
   switch (args.sort) {
     case "name_asc":
       dataQuery = dataQuery.order("name", { ascending: true }).order("id", { ascending: true });

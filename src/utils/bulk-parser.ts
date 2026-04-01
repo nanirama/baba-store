@@ -86,7 +86,8 @@ function headerAliases(key: string): string[] {
   const lower = t.toLowerCase();
   const underscored = lower.replace(/\s+/g, "_");
   const spaced = lower.replace(/_/g, " ");
-  return [...new Set([lower, underscored, spaced])];
+  const compact = lower.replace(/[\s._-]+/g, "");
+  return [...new Set([lower, underscored, spaced, compact])];
 }
 
 /** Case-insensitive lookup — Excel/CSV exports use "Name", "SEO url 0", "Main image", etc. */
@@ -193,10 +194,12 @@ export type BulkProductInput = {
   tags: string[];
   /** Legacy / extra category labels (Cat3, "categories" column, etc.). */
   categories: string[];
-  /** "Cat. 1" / Cat 1 — maps to product `subcategory_id` (child) when matched in Supabase. */
+  /** "Cat. 1" / Cat 1 — maps to product `parent_category_id` when matched in Supabase. */
   category1?: string;
   /** "Cat. 2" / Cat 2 — maps to product `category_id` (parent) when matched in Supabase. */
   category2?: string;
+  /** Optional direct numeric parent id from sheet ("Parent id"). */
+  parentId?: number | null;
   /** Excel "Main image" / "Main_image" → DB `main_image` (not `image1`). */
   mainImage?: string;
   image1?: string;
@@ -313,6 +316,7 @@ function normalizeRow(row: Record<string, unknown>): BulkProductInput {
     categories,
     category1: optionalStr(pick(row, "cat. 1", "cat._1", "cat 1", "cat1")),
     category2: optionalStr(pick(row, "cat. 2", "cat._2", "cat 2", "cat2")),
+    parentId: optionalNumeric(pick(row, "parent id", "parent_id")),
     mainImage,
     image1,
     image2,

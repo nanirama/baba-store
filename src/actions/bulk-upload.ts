@@ -6,7 +6,6 @@ import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/helpers";
 import { parseCsv, parseXlsx, type BulkProductInput } from "@/utils/bulk-parser";
-import { slugify } from "@/utils/slug";
 
 /** Set to `true` to skip main_image + image1–3 fetch/upload (faster dry-run). */
 const BULK_IMAGE_UPLOADS_DISABLED = false;
@@ -134,60 +133,37 @@ type CategoryLookupRow = {
   category_id: number;
 };
 
-function matchCategoryLabel(row: CategoryLookupRow, label: string): boolean {
-  const t = label.trim();
-  if (!t) return false;
-  const lower = t.toLowerCase();
-  const slugKey = slugify(t).toLowerCase();
-  const name = row.name.trim().toLowerCase();
-  const slug = row.slug.trim().toLowerCase();
-  return name === lower || slug === lower || slug === slugKey;
-}
-
-function findTopLevelCategory(rows: CategoryLookupRow[], label: string): CategoryLookupRow | undefined {
-  return rows.find((r) => Number(r.parent_id) === 0 && matchCategoryLabel(r, label));
-}
-
-function findChildUnderParent(
-  rows: CategoryLookupRow[],
-  parent: CategoryLookupRow,
-  label: string
-): CategoryLookupRow | undefined {
-  return rows.find(
-    (r) => Number(r.parent_id) === parent.category_id && matchCategoryLabel(r, label)
-  );
+function normalizeCategoryName(v: string | null | undefined): string {
+  return String(v ?? "")
+    .normalize("NFKC")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 /**
- * Maps Excel names to `products.category_id` (parent) and `products.subcategory_id` (child).
+ * Maps Excel names to numeric product category fields.
+ * Cat. 2 -> products.category_id from categories.category_id
+ * Cat. 1 -> products.parent_category_id from categories.parent_id
  * Only matches existing `public.categories` rows — no inserts.
  */
 function resolveBulkCategoryFks(
   rows: CategoryLookupRow[],
   parentLabel: string | null,
   childLabel: string | null
-): { category_id: string | null; subcategory_id: string | null } {
-  if (!parentLabel && !childLabel) return { category_id: null, subcategory_id: null };
+): { category_id: number | null; parent_category_id: number | null } {
+  const parentKey = normalizeCategoryName(parentLabel);
+  const childKey = normalizeCategoryName(childLabel);
+  if (!parentKey && !childKey) return { category_id: null, parent_category_id: null };
 
-  if (parentLabel && !childLabel) {
-    const p = findTopLevelCategory(rows, parentLabel);
-    return { category_id: p?.id ?? null, subcategory_id: null };
-  }
+  // Name-only lookup as requested, no UUID mapping.
+  const parent = parentKey ? rows.find((r) => normalizeCategoryName(r.name) === parentKey) : undefined;
+  const child = childKey ? rows.find((r) => normalizeCategoryName(r.name) === childKey) : undefined;
 
-  if (!parentLabel && childLabel) {
-    const candidates = rows.filter((r) => Number(r.parent_id) > 0 && matchCategoryLabel(r, childLabel));
-    if (candidates.length === 0) return { category_id: null, subcategory_id: null };
-    const child = candidates[0];
-    const parent = rows.find(
-      (r) => Number(r.parent_id) === 0 && Number(r.category_id) === Number(child.parent_id)
-    );
-    return { category_id: parent?.id ?? null, subcategory_id: child.id };
-  }
-
-  const parent = findTopLevelCategory(rows, parentLabel!);
-  if (!parent) return { category_id: null, subcategory_id: null };
-  const child = findChildUnderParent(rows, parent, childLabel!);
-  return { category_id: parent.id, subcategory_id: child?.id ?? null };
+  return {
+    category_id: parent?.category_id ?? null,
+    parent_category_id: child?.category_id ?? 0,
+  };
 }
 
 export async function processBulkUploadAction(formData: FormData): Promise<BulkResult> {
@@ -236,11 +212,11 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
       };
     });
 
-    const categoryPairCache = new Map<string, { category_id: string | null; subcategory_id: string | null }>();
+    const categoryPairCache = new Map<string, { category_id: number | null; parent_category_id: number | null }>();
 
     function categoryPairForBulkRow(row: BulkProductInput): {
-      category_id: string | null;
-      subcategory_id: string | null;
+      category_id: number | null;
+      parent_category_id: number | null;
     } {
       const { parent, child } = bulkCategoryLabels(row);
       const key = `${parent ?? ""}\x1e${child ?? ""}`;
@@ -252,7 +228,10 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
     }
 
     function buildPayload(row: BulkProductInput, inlineResolvedUrls: boolean): Record<string, unknown> {
-      const { category_id, subcategory_id } = categoryPairForBulkRow(row);
+      const { category_id, parent_category_id } = categoryPairForBulkRow(row);
+      const parentIdFromSheet =
+        typeof row.parentId === "number" && Number.isFinite(row.parentId) ? Math.trunc(row.parentId) : null;
+      const finalParentCategoryId = parentIdFromSheet ?? parent_category_id;
       const uMain = resolveBulkImageUrl(row.mainImage ?? null);
       const u1 = resolveBulkGalleryImageUrl(row.image1 ?? null);
       const u2 = resolveBulkGalleryImageUrl(row.image2 ?? null);
@@ -271,7 +250,7 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
         status: row.status,
         tags: row.tags,
         category_id,
-        subcategory_id,
+        parent_category_id: finalParentCategoryId,
         manufacturer: row.manufacturer ?? null,
         weight: row.weight ?? null,
         length: row.length ?? null,
@@ -312,6 +291,12 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
     const pending: PendingInsert[] = [];
     const seenSlugInFile = new Set<string>();
     let skippedDuplicateSlug = 0;
+    let cat2Provided = 0;
+    let cat2Matched = 0;
+    let cat2Missing = 0;
+    let cat1Provided = 0;
+    let cat1Matched = 0;
+    let cat1Missing = 0;
 
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex];
@@ -321,6 +306,23 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
         continue;
       }
       seenSlugInFile.add(slugKey);
+
+      const { parent, child } = bulkCategoryLabels(row);
+      const { category_id, parent_category_id } = categoryPairForBulkRow(row);
+      const parentIdFromSheet =
+        typeof row.parentId === "number" && Number.isFinite(row.parentId) ? Math.trunc(row.parentId) : null;
+      const finalParentCategoryId = parentIdFromSheet ?? parent_category_id;
+      if (parent) {
+        cat2Provided += 1;
+        if (category_id != null) cat2Matched += 1;
+        else cat2Missing += 1;
+      }
+      if (child || parentIdFromSheet != null) {
+        cat1Provided += 1;
+        if (finalParentCategoryId != null) cat1Matched += 1;
+        else cat1Missing += 1;
+      }
+
       pending.push({ rowIndex, payload: buildPayload(row, useInlineResolvedUrls) });
     }
 
@@ -485,6 +487,11 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
     if (skippedDuplicateSlug > 0) {
       parts.push(
         `Skipped ${skippedDuplicateSlug} row(s) with a duplicate slug (in the file or already in the database).`
+      );
+    }
+    if (cat2Provided > 0 || cat1Provided > 0) {
+      parts.push(
+        `Category mapping: Cat 2 matched ${cat2Matched}/${cat2Provided} (missing ${cat2Missing}); Cat 1 matched ${cat1Matched}/${cat1Provided} (missing ${cat1Missing}).`
       );
     }
     if (useInlineResolvedUrls) {

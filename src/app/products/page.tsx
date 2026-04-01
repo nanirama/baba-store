@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 
-import { ProductsCatalogLayout } from "@/app/products/_components/products-catalog-layout";
+import { ProductsCatalogPage } from "@/app/products/_components/products-catalog-page";
 import {
+  firstSearchParam,
   getProductsListing,
-  parsePageIndex,
-  parsePerPage,
-  parseProductSort,
+  parseListingSearchParams,
   sanitizeSearchQuery,
 } from "@/lib/supabase/products-listing";
 import type { ProductsListingLinkState } from "@/lib/utils/products-listing-url";
@@ -14,18 +13,13 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-function firstString(v: string | string[] | undefined): string | undefined {
-  if (v == null) return undefined;
-  return Array.isArray(v) ? v[0] : v;
-}
-
 type PageProps = {
   searchParams: Promise<SearchParams>;
 };
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const sp = await searchParams;
-  const q = sanitizeSearchQuery(firstString(sp.q));
+  const q = sanitizeSearchQuery(firstSearchParam(sp.q));
   const title = q ? `ძებნა: ${q} | Baba.ge` : "ყველა პროდუქტი | Baba.ge";
   return {
     title,
@@ -38,18 +32,13 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export default async function ProductsPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const qRaw = firstString(sp.q);
-  const q = sanitizeSearchQuery(qRaw);
-  const category = firstString(sp.category);
-  const sort = parseProductSort(firstString(sp.sort));
-  const per = parsePerPage(firstString(sp.per));
-  const pageReq = parsePageIndex(firstString(sp.page));
+  const { q, sort, per, page, category } = parseListingSearchParams(sp);
 
   const listing = await getProductsListing({
     q,
     categorySlug: category,
     sort,
-    page: pageReq,
+    page,
     perPage: per,
   });
 
@@ -61,14 +50,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     page: listing.page,
   };
 
-  const totalPages = Math.max(1, Math.ceil(listing.total / listing.perPage));
-
   return (
-    <ProductsCatalogLayout
+    <ProductsCatalogPage
       title="ყველა პროდუქტი"
       listing={listing}
       linkState={linkState}
-      totalPages={totalPages}
       categorySlug={category}
     />
   );

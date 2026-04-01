@@ -1,13 +1,23 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-import { BaseLayout } from "@/components/Common/BaseLayout";
+import { ProductsCatalogPage } from "@/app/products/_components/products-catalog-page";
 import { getStorefrontChildCategoryBySlugs } from "@/lib/supabase/categories";
-import { childCategoryHref, isReservedRootSlug, parentCategoryHref } from "@/lib/utils/category-href";
+import {
+  emptyProductsListing,
+  getStorefrontProductsListingByCategoryNumericId,
+  parseListingSearchParams,
+} from "@/lib/supabase/products-listing";
+import { childCategoryHref, isReservedRootSlug } from "@/lib/utils/category-href";
+import type { ProductsListingLinkState } from "@/lib/utils/products-listing-url";
+
+export const dynamic = "force-dynamic";
+
+type SearchParams = Record<string, string | string[] | undefined>;
 
 type PageProps = {
   params: Promise<{ segment: string; child: string }>;
+  searchParams: Promise<SearchParams>;
 };
 
 function descriptionToText(v: unknown): string | undefined {
@@ -34,8 +44,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ChildCategoryPage({ params }: PageProps) {
+export default async function ChildCategoryPage({ params, searchParams }: PageProps) {
   const { segment, child } = await params;
+  const sp = await searchParams;
 
   if (isReservedRootSlug(segment)) {
     notFound();
@@ -46,36 +57,42 @@ export default async function ChildCategoryPage({ params }: PageProps) {
     notFound();
   }
 
-  const { parent, child: childCat } = row;
+  const { child: childCat } = row;
+
+  const { q, sort, per, page } = parseListingSearchParams(sp);
+
+  const numericCategoryId = Number(childCat.category_id);
+  const listing =
+    Number.isFinite(numericCategoryId) && numericCategoryId > 0
+      ? await getStorefrontProductsListingByCategoryNumericId({
+          categoryId: numericCategoryId,
+          q,
+          sort,
+          page,
+          perPage: per,
+        })
+      : emptyProductsListing(per);
+
+  const linkState: ProductsListingLinkState = {
+    q,
+    sort,
+    per: String(listing.perPage),
+    page: listing.page,
+    segmentBase: segment,
+    segmentChild: child,
+  };
+
+  const descText = descriptionToText(childCat.description);
 
   return (
-    <BaseLayout>
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-        <nav className="mb-6 text-sm text-muted-foreground" aria-label="ბრედკრამბი">
-          <Link href="/" className="hover:text-primary">
-            მთავარი
-          </Link>
-          <span className="mx-2" aria-hidden>
-            /
-          </span>
-          <Link href={parentCategoryHref(parent.slug)} className="hover:text-primary">
-            {parent.name}
-          </Link>
-          <span className="mx-2" aria-hidden>
-            /
-          </span>
-          <span className="text-foreground">{childCat.name}</span>
-        </nav>
-        <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          {childCat.name}
-        </h1>
-        {descriptionToText(childCat.description) ? (
-          <p className="mt-4 text-lg text-muted-foreground">{descriptionToText(childCat.description)}</p>
-        ) : null}
-        <p className="mt-8 text-sm text-muted-foreground">
-          პროდუქტების სია მალე გამოჩნდება ამ კატეგორიისთვის.
-        </p>
-      </div>
-    </BaseLayout>
+    <ProductsCatalogPage
+      title={childCat.name}
+      listing={listing}
+      linkState={linkState}
+      categorySlug={segment}
+      childSlug={child}
+      sidebarLinkMode="root"
+      description={descText ?? null}
+    />
   );
 }

@@ -15,6 +15,10 @@ type ProductsCatalogLayoutProps = {
   categorySlug?: string;
   /** Sidebar: `/products/{categorySlug}/{childSlug}` */
   childSlug?: string;
+  /** Sidebar links: `root` for `/{slug}` storefront routes. */
+  sidebarLinkMode?: "products" | "root";
+  /** Optional intro under the title (e.g. category description). */
+  description?: string | null;
 };
 
 export function ProductsCatalogLayout({
@@ -24,7 +28,15 @@ export function ProductsCatalogLayout({
   totalPages,
   categorySlug,
   childSlug,
+  sidebarLinkMode = "products",
+  description,
 }: ProductsCatalogLayoutProps) {
+  const scopedListing =
+    Boolean(linkState.q) ||
+    Boolean(linkState.category) ||
+    Boolean(linkState.segmentBase) ||
+    Boolean(linkState.segmentChild);
+
   return (
     <BaseLayout>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -38,12 +50,19 @@ export function ProductsCatalogLayout({
         </header>
 
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-          <ProductsCategorySidebar categorySlug={categorySlug} childSlug={childSlug} />
+          <ProductsCategorySidebar
+            categorySlug={categorySlug}
+            childSlug={childSlug}
+            linkMode={sidebarLinkMode}
+          />
           <div className="min-w-0 flex-1">
+            {description ? (
+              <p className="mb-6 max-w-3xl text-lg text-gray-600">{description}</p>
+            ) : null}
             <ProductsToolbar state={linkState} />
             {listing.total === 0 ? (
               <p className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center text-gray-600">
-                {linkState.q || linkState.category ? "პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის დამატებული."}
+                {scopedListing ? "პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის დამატებული."}
               </p>
             ) : (
               <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

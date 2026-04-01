@@ -29,7 +29,7 @@ export function BulkUploadForm() {
         Maps <span className="font-medium">SEO url 0</span> (and Slug) to product slug and HTML description.{" "}
         <span className="font-medium">Cat. 2</span> must match a top-level category and fills{" "}
         <span className="font-medium">category_id</span>; <span className="font-medium">Cat. 1</span> must match a subcategory
-        under that parent and fills <span className="font-medium">subcategory_id</span> (existing categories in Supabase
+        under that parent and fills <span className="font-medium">parent_category_id</span> (existing categories in Supabase
         only — names or slugs). Main image: full URLs or site paths. <span className="font-medium">Image 1–3</span> use{" "}
         <span className="font-mono text-xs">https://baba.ge/image/cache/</span> then upload to storage.
       </p>

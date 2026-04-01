@@ -3,6 +3,13 @@ export type ProductsListingLinkState = {
   category?: string;
   /** With `category` (child slug), builds `/products/{parent}/{child}`. */
   categoryParent?: string;
+  /**
+   * When set (storefront parent at `/{slug}`), sort/per/page/q links use `/{segmentBase}?…`
+   * instead of `/products?…` or `/products/{slug}?…`.
+   */
+  segmentBase?: string;
+  /** With `segmentBase`, storefront child URLs use `/{segmentBase}/{segmentChild}?…`. */
+  segmentChild?: string;
   sort: string;
   per: string;
   page: number;
@@ -15,6 +22,8 @@ export function buildProductsListingHref(overrides: Partial<ProductsListingLinkS
   q?: string;
   category?: string;
   categoryParent?: string;
+  segmentBase?: string;
+  segmentChild?: string;
   sort?: string;
   per?: string;
   page?: number;
@@ -28,6 +37,15 @@ export function buildProductsListingHref(overrides: Partial<ProductsListingLinkS
   const page = overrides.page ?? 1;
   if (page !== 1) p.set("page", String(page));
   const qs = p.toString();
+
+  const segmentBase = overrides.segmentBase?.trim();
+  if (segmentBase) {
+    const segmentChild = overrides.segmentChild?.trim();
+    const base = segmentChild
+      ? `/${encodeURIComponent(segmentBase)}/${encodeURIComponent(segmentChild)}`
+      : `/${encodeURIComponent(segmentBase)}`;
+    return qs ? `${base}?${qs}` : base;
+  }
 
   const parent = overrides.categoryParent?.trim();
   const cat = overrides.category?.trim();
@@ -47,13 +65,18 @@ export function buildProductsListingHref(overrides: Partial<ProductsListingLinkS
 export function mergeListingParams(
   base: ProductsListingLinkState,
   patch: Partial<
-    Pick<ProductsListingLinkState, "sort" | "per" | "page" | "category" | "categoryParent" | "q">
+    Pick<
+      ProductsListingLinkState,
+      "sort" | "per" | "page" | "category" | "categoryParent" | "segmentBase" | "segmentChild" | "q"
+    >
   >
 ): ProductsListingLinkState {
   return {
     q: patch.q ?? base.q,
     category: patch.category ?? base.category,
     categoryParent: patch.categoryParent ?? base.categoryParent,
+    segmentBase: patch.segmentBase ?? base.segmentBase,
+    segmentChild: patch.segmentChild ?? base.segmentChild,
     sort: patch.sort ?? base.sort,
     per: patch.per ?? base.per,
     page: patch.page ?? base.page,
@@ -65,6 +88,8 @@ export function toHref(state: ProductsListingLinkState): string {
     q: state.q,
     category: state.category,
     categoryParent: state.categoryParent,
+    segmentBase: state.segmentBase,
+    segmentChild: state.segmentChild,
     sort: state.sort,
     per: state.per,
     page: state.page,

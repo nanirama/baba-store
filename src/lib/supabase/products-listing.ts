@@ -242,8 +242,8 @@ export async function getProductsListing(args: {
 }
 
 /**
- * Storefront parent category page (`/{parentSlug}`): `products.category_id` is the numeric
- * `categories.category_id` (bulk import), not `categories.id` (uuid).
+ * Storefront parent category page (`/{parentSlug}`): matches numeric `categories.category_id` on
+ * `products.category_id` OR `products.parent_category_id` (subcategory rows store leaf in `category_id`).
  */
 export async function getStorefrontProductsListingByCategoryNumericId(args: {
   categoryId: number;
@@ -267,7 +267,9 @@ export async function getStorefrontProductsListingByCategoryNumericId(args: {
     query: any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any {
-    let q = query.eq("category_id", categoryId).eq("status", "active");
+    let q = query
+      .or(`category_id.eq.${categoryId},parent_category_id.eq.${categoryId}`)
+      .eq("status", "active");
     if (ilikeTerm.length > 0) {
       const pattern = `%${ilikeTerm}%`;
       q = q.or(`name.ilike.${pattern},sku.ilike.${pattern},model.ilike.${pattern}`);

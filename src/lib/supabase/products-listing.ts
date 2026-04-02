@@ -129,7 +129,8 @@ function applyFiltersToQuery(
   let q = query;
 
   if (ilikeTerm.length > 0) {
-    q = q.ilike("name", `%${ilikeTerm}%`);
+    const pattern = `%${ilikeTerm}%`;
+    q = q.or(`name.ilike.${pattern},sku.ilike.${pattern},model.ilike.${pattern}`);
   }
 
   if (category.kind === "ids" && category.ids.length > 0) {
@@ -265,7 +266,8 @@ export async function getStorefrontProductsListingByCategoryNumericId(args: {
   ): any {
     let q = query.eq("category_id", categoryId).eq("status", "active");
     if (ilikeTerm.length > 0) {
-      q = q.ilike("name", `%${ilikeTerm}%`);
+      const pattern = `%${ilikeTerm}%`;
+      q = q.or(`name.ilike.${pattern},sku.ilike.${pattern},model.ilike.${pattern}`);
     }
     return q;
   }

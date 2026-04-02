@@ -113,13 +113,13 @@ function FooterBottomStrip() {
 
           {/* 4 — service highlights */}
           <div className="flex w-full max-w-xs flex-col gap-4 sm:max-w-none">
-            <p className="text-base font-bold text-white">უფასო მიწოდება</p>
-            <div>
-              <p className="text-base font-bold text-white">საბანკო განვადება</p>
+            <Link href="/miwodebis-pirobebi" className="text-base font-bold text-white">უფასო მიწოდება</Link>
+            <div className="flex flex-col gap-1">
+              <Link href="/onlain-ganvadeba" className="text-base font-bold text-white">საბანკო განვადება</Link>
               <p className="mt-1 text-sm text-slate-400">0% განაკვეთი 3 თვემდე</p>
             </div>
-            <div>
-              <p className="text-base font-bold text-white">90 დღიანი დაბრუნება</p>
+            <div className="flex flex-col gap-1">
+              <Link href="/sagarantio-pirobebi" className="text-base font-bold text-white">90 დღიანი დაბრუნება</Link>
               <p className="mt-1 text-sm text-slate-400">პრობლემურ პროდუქტებზე</p>
             </div>
           </div>

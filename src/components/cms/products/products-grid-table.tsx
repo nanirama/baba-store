@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import type { ProductRecord } from "@/types/cms";
 import { deleteProductFormAction } from "@/actions/products";
 
@@ -35,17 +35,17 @@ export function ProductsGridTable({ products, emptySearch }: ProductsGridTablePr
       <table className="w-full min-w-[720px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50/90">
-            <th className="w-[84px] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 first:pl-5">
-              Image
+            <th className="max-w-[280px] px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 first:pl-5">
+              Product Name
             </th>
             <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Product
+              Model
             </th>
-            <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-              SKU
-            </th>
-            <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <th className="px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
               Price
+            </th>
+            <th className="px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Quantity
             </th>
             <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
               Status
@@ -57,46 +57,23 @@ export function ProductsGridTable({ products, emptySearch }: ProductsGridTablePr
         </thead>
         <tbody className="divide-y divide-slate-100">
           {products.map((product) => {
-            const thumb = productThumbnailUrl(product);
             const editHref = `/dashboard/products/edit/${product.id}`;
             return (
               <tr key={product.id} className="group transition-colors hover:bg-slate-50/80">
-                <td className="px-4 py-3 align-middle first:pl-5">
-                  <Link href={editHref} className="block" aria-label={`Edit ${product.name}`}>
-                    <div className="relative h-[52px] w-[52px] shrink-0 overflow-hidden rounded-lg border border-slate-200/80 bg-slate-100 shadow-sm transition group-hover:border-slate-300">
-                      {thumb ? (
-                        <Image
-                          src={thumb}
-                          alt=""
-                          width={52}
-                          height={52}
-                          sizes="52px"
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[10px] font-medium text-slate-400">
-                          —
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                </td>
-                <td className="max-w-[220px] px-4 py-3 align-middle">
+                <td className="max-w-[280px] px-4 py-3 align-middle first:pl-5">
                   <Link
                     href={editHref}
                     className="font-medium text-slate-900 transition hover:text-[#ff5100]"
                   >
                     {product.name}
                   </Link>
-                  <p className="mt-0.5 truncate text-xs text-slate-500" title={product.slug}>
-                    {product.slug}
-                  </p>
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 align-middle font-mono text-xs text-slate-600">
-                  {product.sku ?? "—"}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 align-middle font-semibold tabular-nums text-slate-900">
-                  ₾{product.price}
+                <td className="px-4 py-3 align-middle text-slate-600">{product.model ?? "—"}</td>
+                <td className="whitespace-nowrap px-4 py-3 align-middle text-right font-semibold tabular-nums text-slate-900">₾{product.price}</td>
+                <td className="whitespace-nowrap px-4 py-3 align-middle text-right">
+                  <span className="inline-flex rounded-md bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white">
+                    {product.quantity ?? 0}
+                  </span>
                 </td>
                 <td className="px-4 py-3 align-middle">
                   <span
@@ -106,28 +83,21 @@ export function ProductsGridTable({ products, emptySearch }: ProductsGridTablePr
                   </span>
                 </td>
                 <td className="px-4 py-3 align-middle last:pr-5">
-                  <div className="flex flex-wrap items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-2">
                     <Link
                       href={editHref}
-                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-[#ff5100]"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-blue-600 text-white shadow-sm transition hover:bg-blue-700"
+                      aria-label="Edit product"
                     >
-                      <Pencil className="h-3.5 w-3.5" aria-hidden />
-                      Edit
-                    </Link>
-                    <Link
-                      href={`/products/${product.slug}`}
-                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                      View
+                      <Pencil className="h-4 w-4" aria-hidden />
                     </Link>
                     <form action={deleteProductFormAction.bind(null, product.id)} className="inline">
                       <button
                         type="submit"
-                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-red-500 text-white shadow-sm transition hover:bg-red-600"
+                        aria-label="Delete product"
                       >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                        Delete
+                        <Trash2 className="h-4 w-4" aria-hidden />
                       </button>
                     </form>
                   </div>

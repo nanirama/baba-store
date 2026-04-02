@@ -56,7 +56,7 @@ export async function getSeeAlsoProducts(args: {
   if (ids.length === 0) return [];
 
   const supabase = createAdminClient();
-  const orParts = ids.flatMap((id) => [`category_id.eq.${id}`, `subcategory_id.eq.${id}`]);
+  const orParts = ids.flatMap((id) => [`category_id.eq.${id}`]);
 
   const { data, error } = await supabase
     .from("products")

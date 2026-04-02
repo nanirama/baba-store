@@ -145,3 +145,6 @@
   -ms-overflow-style: none;  /* IE & Edge */
   scrollbar-width: none;     /* Firefox */
 }
+
+.product_width {width: stretch !important;
+}

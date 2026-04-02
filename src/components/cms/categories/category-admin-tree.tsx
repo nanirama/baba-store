@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Minus, Plus } from "lucide-react";
+import { ChevronRight, Minus, Plus, Edit2, Trash2 } from "lucide-react";
 import type { CategoryRecord } from "@/types/cms";
 import {
   buildCategoryTree,
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 type CategoryAdminTreeProps = {
   categories: CategoryRecord[];
+  productCounts?: Record<string, number>;
 };
 
 function isActiveStatus(status: CategoryRecord["status"]): boolean {
@@ -34,7 +35,7 @@ function* walkTree(
   }
 }
 
-export function CategoryAdminTree({ categories }: CategoryAdminTreeProps) {
+export function CategoryAdminTree({ categories, productCounts = {} }: CategoryAdminTreeProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const activeCategories = useMemo(() => categories.filter((c) => isActiveStatus(c.status)), [categories]);
@@ -79,25 +80,16 @@ export function CategoryAdminTree({ categories }: CategoryAdminTreeProps) {
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50/90">
             <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 first:pl-5">
-              Category
+              Category Name
             </th>
-            <th className="hidden px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:table-cell">
-              Slug
+            <th className="px-4 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Products
             </th>
-            <th className="hidden px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
-              Category ID
+            <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Sort Order
             </th>
-            <th className="hidden px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
-              Parent ID
-            </th>
-            <th className="hidden px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
-              Sort
-            </th>
-            <th className="hidden px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 lg:table-cell">
-              Status
-            </th>
-            <th className="w-[200px] px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 last:pr-5">
-              Actions
+            <th className="w-[160px] px-4 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 last:pr-5">
+              Action
             </th>
           </tr>
         </thead>
@@ -138,31 +130,34 @@ export function CategoryAdminTree({ categories }: CategoryAdminTreeProps) {
                     )}
                   </div>
                 </td>
-                <td className="hidden px-4 py-3 align-middle text-slate-500 sm:table-cell">{node.slug}</td>
-                <td className="hidden px-4 py-3 align-middle text-slate-500 lg:table-cell">{node.category_id}</td>
-                <td className="hidden px-4 py-3 align-middle text-slate-500 lg:table-cell">{node.parent_id}</td>
-                <td className="hidden px-4 py-3 align-middle text-slate-500 lg:table-cell">{node.sort_order}</td>
-                <td className="hidden px-4 py-3 align-middle text-slate-500 lg:table-cell">{node.status}</td>
-                <td className="px-4 py-3 align-middle text-right last:pr-5">
+                <td className="px-4 py-3 text-center align-middle">
+                  <span className="inline-flex rounded-md bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white">
+                    {productCounts[node.id] ?? 0}
+                  </span>
+                </td>
+                <td className="px-4 py-3 align-middle text-slate-500">{node.sort_order}</td>
+                <td className="px-4 py-3 text-right align-middle last:pr-5">
                   <div className="flex items-center justify-end gap-2">
                     <Link
                       href={`/dashboard/categories/edit/${node.id}`}
-                      className="rounded-lg px-2 py-1.5 text-xs font-medium text-[#ff5100] transition hover:bg-[#ff5100]/10"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-blue-600 text-white shadow-sm transition hover:bg-blue-700"
+                      aria-label="Edit category"
                     >
-                      Edit
+                      <Edit2 className="h-4 w-4" />
                     </Link>
                     <button
                       type="button"
                       disabled={isPending}
-                      className="rounded-lg px-2 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
                       onClick={() => {
                         startTransition(async () => {
                           const result = await deleteCategoryAction(node.id);
                           if (result.success) router.refresh();
                         });
                       }}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-red-500 text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50"
+                      aria-label="Delete category"
                     >
-                      Delete
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </td>

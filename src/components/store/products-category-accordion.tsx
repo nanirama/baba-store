@@ -47,9 +47,9 @@ export function ProductsCategoryAccordion({
   linkMode = "products",
 }: {
   parents: CatalogCategoryParent[];
-  /** Top-level category slug (`/products/{categorySlug}`). */
+  /** Top-level category slug (`/{categorySlug}`). */
   categorySlug?: string;
-  /** Subcategory slug (`/products/{categorySlug}/{childSlug}`). */
+  /** Subcategory slug (`/{categorySlug}/{childSlug}`). */
   childSlug?: string;
   /** `root` → `/{slug}` storefront URLs; `products` → `/products/{slug}`. */
   linkMode?: "products" | "root";
@@ -90,7 +90,7 @@ function SidebarParent({
   const parentHref =
     linkMode === "root"
       ? parentCategoryHref(parent.slug)
-      : `/products/${encodeURIComponent(parent.slug)}`;
+      : `/${encodeURIComponent(parent.slug)}`;
   const isOpenTarget = parentRowIsOpen(parent, categorySlug, childSlug);
 
   const [open, setOpen] = useState(isOpenTarget);
@@ -107,7 +107,7 @@ function SidebarParent({
       <div className="border-b border-gray-200">
         <Link
           href={parentHref}
-          className={`flex items-center gap-3 py-3.5 pr-1 transition-colors hover:bg-gray-100 ${parentOnlyActive ? "bg-orange-50/60" : ""
+          className={`flex items-center gap-3 py-3.5 pr-1 transition-colors hover:bg-transparent ${parentOnlyActive ? "bg-transparent" : ""
             }`}
         >
           <CategoryGlyph iconUrl={parent.icon} />
@@ -118,14 +118,14 @@ function SidebarParent({
   }
 
   return (
-    <div className="border-b border-gray-200 bg-white">
-      <div className="flex items-center gap-2 py-1.5 pr-1 group">
+    <div className="border-b border-gray-200 bg-transparent">
+      <div className="group flex items-center gap-2 py-1.5 pr-1">
 
         <Link
           href={parentHref}
           className={cn(
             "flex min-w-0 flex-1 items-center gap-3 py-2 transition-colors hover:opacity-90 ",
-            showParentActiveStyle && "rounded-md bg-orange-50/50 px-1"
+            showParentActiveStyle && "rounded-md bg-transparent px-1"
           )}
         >
           <CategoryGlyph iconUrl={parent.icon} />
@@ -164,12 +164,12 @@ function SidebarParent({
         >
           ყველა — {parent.name}
         </Link> */}
-        <ul className="space-y-0.5 border-l border-gray-200 pl-3">
+        <ul className="space-y-0.5 pl-3">
           {parent.children.map((c) => {
             const childHref =
               linkMode === "root"
                 ? childCategoryHref(parent.slug, c.slug)
-                : `/products/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
+                : `/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
             const childActive = categorySlug === parent.slug && childSlug === c.slug;
             return (
               <li key={c.id}>

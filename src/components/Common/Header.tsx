@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
 
 import { CatalogMegaMenu } from "@/components/Common/catalog-mega-menu";
+import { HeaderSearchForm } from "@/components/Common/HeaderSearchForm";
 import {
   headerMobileScrollLinks,
   headerTopCenterLink,
@@ -79,38 +79,6 @@ function HeaderTopBar() {
         </nav>
       </div>
     </>
-  );
-}
-
-function HeaderSearchForm() {
-  return (
-    <form
-      action="/products"
-      method="get"
-      role="search"
-      className="relative flex w-full min-w-0 flex-1 lg:max-w-sm justify-end"
-    >
-      <label htmlFor="site-search" className="sr-only">
-        ძებნა საიტზე
-      </label>
-      <input
-        id="site-search"
-        name="q"
-        type="search"
-        maxLength={120}
-        placeholder="ძებნა..."
-        autoComplete="off"
-        enterKeyHint="search"
-        className="h-11 w-full min-w-0 px-4 rounded-lg border border-foreground/90 bg-white pr-12 text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-      />
-      <button
-        type="submit"
-        className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        aria-label="ძებნის გაშვება"
-      >
-        <Search className="h-5 w-5" aria-hidden />
-      </button>
-    </form>
   );
 }
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
+import Seo, { seoGenerateMetadata } from "@/components/Common/Seo";
 import { ProductsCatalogPage } from "@/app/products/_components/products-catalog-page";
 import { getStorefrontChildCategoryBySlugs } from "@/lib/supabase/categories";
 import {
@@ -8,7 +9,11 @@ import {
   getStorefrontProductsListingByCategoryNumericId,
   parseListingSearchParams,
 } from "@/lib/supabase/products-listing";
-import { childCategoryHref, isReservedRootSlug } from "@/lib/utils/category-href";
+import {
+  childCategoryHref,
+  isReservedRootSlug,
+  parentCategoryHref,
+} from "@/lib/utils/category-href";
 import type { ProductsListingLinkState } from "@/lib/utils/products-listing-url";
 
 export const dynamic = "force-dynamic";
@@ -35,13 +40,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const row = await getStorefrontChildCategoryBySlugs(segment, child);
   if (!row) return { title: "კატეგორია" };
   const descriptionText = descriptionToText(row.child.description);
-  return {
-    title: `${row.child.name} | Baba.ge`,
-    description: descriptionText,
-    alternates: {
-      canonical: childCategoryHref(segment, child),
-    },
-  };
+  const metaTitle = row.child.meta_title?.trim() || undefined;
+  const metaDescription = row.child.meta_description?.trim() || undefined;
+  const metaKeywords = row.child.meta_keywords?.trim() || undefined;
+
+  const title = metaTitle ?? `${row.child.name} | Baba.ge`;
+  const description = metaDescription ?? descriptionText ?? row.child.name;
+  return seoGenerateMetadata({
+    title,
+    description,
+    url: childCategoryHref(segment, child),
+    imageUrl: row.child.icon ?? undefined,
+    keywords: metaKeywords,
+  });
 }
 
 export default async function ChildCategoryPage({ params, searchParams }: PageProps) {
@@ -83,16 +94,77 @@ export default async function ChildCategoryPage({ params, searchParams }: PagePr
   };
 
   const descText = descriptionToText(childCat.description);
+  const metaDescription = childCat.meta_description?.trim() || undefined;
+  const metaTitle = childCat.meta_title?.trim() || undefined;
+  const metaKeywords = childCat.meta_keywords?.trim() || undefined;
+
+  const baseUrl = "https://baba.ge";
+  const canonicalPath = childCategoryHref(segment, child);
+  const canonicalUrl = new URL(canonicalPath, baseUrl).toString();
+  const iconUrl = row.child.icon
+    ? row.child.icon.startsWith("http://") || row.child.icon.startsWith("https://")
+      ? row.child.icon
+      : new URL(row.child.icon, baseUrl).toString()
+    : undefined;
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Baba.ge",
+        item: new URL("/", baseUrl).toString(),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: row.parent.name,
+        item: new URL(parentCategoryHref(segment), baseUrl).toString(),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: childCat.name,
+        item: canonicalUrl,
+      },
+    ],
+  };
+
+  const webPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: metaTitle ?? `${childCat.name} | Baba.ge`,
+    description: metaDescription ?? descText ?? childCat.name,
+    url: canonicalUrl,
+    primaryImageOfPage: iconUrl,
+    ...(metaKeywords ? { keywords: metaKeywords } : {}),
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Baba.ge",
+      url: baseUrl,
+    },
+    breadcrumb: breadcrumbSchema,
+  };
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [breadcrumbSchema, webPageSchema],
+  };
 
   return (
-    <ProductsCatalogPage
-      title={childCat.name}
-      listing={listing}
-      linkState={linkState}
-      categorySlug={segment}
-      childSlug={child}
-      sidebarLinkMode="root"
-      description={descText ?? null}
-    />
+    <>
+      <Seo schema={schema} />
+      <ProductsCatalogPage
+        title={childCat.name}
+        listing={listing}
+        linkState={linkState}
+        categorySlug={segment}
+        childSlug={child}
+        sidebarLinkMode="root"
+        description={metaDescription ?? descText ?? null}
+      />
+    </>
   );
 }

@@ -5,6 +5,9 @@ import { BaseLayout } from "@/components/Common/BaseLayout";
 import { Button } from "@/components/ui/button";
 import { parseTriStateBoolean } from "@/utils/cms-schemas";
 
+/** Supabase server client uses `cache: "no-store"` fetches — static prerender would conflict at build time. */
+export const dynamic = "force-dynamic";
+
 export default async function RootPage() {
   const products = await getProducts();
   const promotionProducts = products.filter((p) => parseTriStateBoolean(p.promotions));

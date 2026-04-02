@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+/** Form flags: "true"/"false", checkbox "on", legacy "1"/"0", or DB booleans/smallints. */
+export function parseTriStateBoolean(val: unknown): boolean {
+  if (val === true || val === 1) return true;
+  if (val === false || val === 0 || val == null || val === "") return false;
+  if (typeof val === "string") {
+    const s = val.trim().toLowerCase();
+    if (s === "false" || s === "0" || s === "no" || s === "f") return false;
+    return s === "on" || s === "true" || s === "1" || s === "yes" || s === "t";
+  }
+  return false;
+}
+
 export const productStatusSchema = z.enum(["draft", "active", "archived"]);
 
 export const productMetaSchema = z
@@ -58,18 +70,9 @@ export const productSchema = z.object({
     (val) => (val === "" || val === null || val === undefined ? null : val),
     z.string().uuid().nullable().optional()
   ),
-  promotions: z.preprocess(
-    (val) => val === "on" || val === true || val === "true" || val === "1",
-    z.boolean()
-  ),
-  bestsellers: z.preprocess(
-    (val) => val === "on" || val === true || val === "true" || val === "1",
-    z.boolean()
-  ),
-  discounts: z.preprocess(
-    (val) => val === "on" || val === true || val === "true" || val === "1",
-    z.boolean()
-  ),
+  promotions: z.preprocess(parseTriStateBoolean, z.boolean()),
+  bestsellers: z.preprocess(parseTriStateBoolean, z.boolean()),
+  discounts: z.preprocess(parseTriStateBoolean, z.boolean()),
 });
 
 export const categorySchema = z.object({

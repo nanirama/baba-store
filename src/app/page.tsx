@@ -3,12 +3,13 @@ import { ProductsSliderClient } from "@/components/store/products-slider-client"
 import { getProducts } from "@/lib/supabase/cms-queries";
 import { BaseLayout } from "@/components/Common/BaseLayout";
 import { Button } from "@/components/ui/button";
+import { parseTriStateBoolean } from "@/utils/cms-schemas";
 
 export default async function RootPage() {
   const products = await getProducts();
-  const promotionProducts = products.filter((p) => p.promotions);
-  const bestSellerProducts = products.filter((p) => p.bestsellers);
-  const discountProducts = products.filter((p) => p.discounts);
+  const promotionProducts = products.filter((p) => parseTriStateBoolean(p.promotions));
+  const bestSellerProducts = products.filter((p) => parseTriStateBoolean(p.bestsellers));
+  const discountProducts = products.filter((p) => parseTriStateBoolean(p.discounts));
   return (
     <BaseLayout>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 flex flex-col items-center justify-center">

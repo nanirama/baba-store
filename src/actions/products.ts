@@ -276,6 +276,14 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
 
     delete dbPayload.related_products;
 
+    // Category pickers hidden in CMS — omit so DB keeps existing / default FKs.
+    delete dbPayload.category_id;
+    delete dbPayload.subcategory_id;
+
+    dbPayload.promotions = Boolean(payload.promotions);
+    dbPayload.bestsellers = Boolean(payload.bestsellers);
+    dbPayload.discounts = Boolean(payload.discounts);
+
     const { error } = await insertProductWithStockFallback(supabase, dbPayload);
     if (error) throw new Error(error.message);
 
@@ -323,6 +331,14 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
     delete (dbPayload as any).stock;
 
     delete dbPayload.related_products;
+
+    // Category pickers hidden in CMS — omit so saves do not clear categories.
+    delete dbPayload.category_id;
+    delete dbPayload.subcategory_id;
+
+    dbPayload.promotions = Boolean(payload.promotions);
+    dbPayload.bestsellers = Boolean(payload.bestsellers);
+    dbPayload.discounts = Boolean(payload.discounts);
 
     const { error } = await updateProductWithStockFallback(supabase, dbPayload, productId);
     if (error) throw new Error(error.message);

@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createProductAction, updateProductAction } from "@/actions/products";
-import type { CategoryRecord, ProductRecord } from "@/types/cms";
+import type { ProductRecord } from "@/types/cms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,47 +19,40 @@ const TipTapEditor = dynamic(
 
 type ProductFormProps = {
   product?: ProductRecord | null;
-  categories: CategoryRecord[];
 };
 
 const defaultDescription = JSON.stringify({ type: "doc", content: [] });
 
-/** Normalize category id for comparisons (Postgres uuid / optional fields). */
-function normId(id: string | number | null | undefined): string {
-  if (id == null || id === "") return "";
-  return String(id).trim();
+function formDataForConsole(fd: FormData): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of fd.entries()) {
+    const entry =
+      value instanceof File
+        ? { _type: "File" as const, name: value.name, size: value.size, type: value.type || undefined }
+        : value;
+    if (key in out) {
+      const prev = out[key];
+      out[key] = Array.isArray(prev) ? [...prev, entry] : [prev, entry];
+    } else {
+      out[key] = entry;
+    }
+  }
+  return out;
 }
 
-/** Lowercase UUID so `<select value>` matches `<option value>` (HTML is case-sensitive). */
-function normalizeUuid(id: string | number | null | undefined): string {
-  const s = normId(id);
-  return s ? s.toLowerCase() : "";
+/** Safe flag from DB/API — avoids `Boolean("false") === true` and handles 0/1. */
+function coerceProductFlag(v: unknown): boolean {
+  if (v === true || v === 1) return true;
+  if (v === false || v === 0 || v == null) return false;
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    if (s === "true" || s === "1" || s === "t" || s === "yes" || s === "on") return true;
+    if (s === "false" || s === "0" || s === "f" || s === "no" || s === "") return false;
+  }
+  return false;
 }
 
-/**
- * Category dropdown must show the parent of the selected subcategory so children options exist.
- * `products.subcategory_id` drives the active Subcategory option.
- */
-function deriveCategoryIdForForm(
-  categoryIdFromProduct: string | null | undefined,
-  subcategoryIdFromProduct: string | null | undefined,
-  all: CategoryRecord[]
-): string {
-  const sid = normalizeUuid(subcategoryIdFromProduct);
-  const cid = normalizeUuid(categoryIdFromProduct);
-  if (!sid || all.length === 0) return cid;
-
-  const sub = all.find((c) => normalizeUuid(c.id) === sid);
-  const parent = sub ? normalizeUuid(sub.parent_id) : "";
-  if (parent && (!cid || cid !== parent)) return parent;
-  return cid;
-}
-
-function isRootCategory(c: CategoryRecord): boolean {
-  return Number(c.parent_id) === 0;
-}
-
-export function ProductForm({ product, categories: allCategories }: ProductFormProps) {
+export function ProductForm({ product }: ProductFormProps) {
   const productData = product as (ProductRecord & {
     meta_title?: string | null;
     meta_description?: string | null;
@@ -97,40 +90,9 @@ export function ProductForm({ product, categories: allCategories }: ProductFormP
   const [image2Url, setImage2Url] = useState(() => product?.image2 ?? "");
   const [image3Url, setImage3Url] = useState(() => product?.image3 ?? "");
 
-  const [categoryId, setCategoryId] = useState(() =>
-    deriveCategoryIdForForm(product?.category_id, product?.subcategory_id, [])
-  );
-  const [subcategoryId, setSubcategoryId] = useState(() => normalizeUuid(product?.subcategory_id));
-
-  const [promotions, setPromotions] = useState(() => Boolean(product?.promotions));
-  const [bestsellers, setBestsellers] = useState(() => Boolean(product?.bestsellers));
-  const [discounts, setDiscounts] = useState(() => Boolean(product?.discounts));
-
-  const rootCategories = useMemo(() => {
-    const roots = allCategories.filter(isRootCategory);
-    const base = roots.length > 0 ? roots : [...allCategories];
-    const sorted = [...base].sort((a, b) => a.name.localeCompare(b.name));
-    const cid = normalizeUuid(categoryId);
-    if (cid && !sorted.some((c) => normalizeUuid(c.id) === cid)) {
-      const row = allCategories.find((c) => normalizeUuid(c.id) === cid);
-      if (row) sorted.unshift(row);
-    }
-    return sorted;
-  }, [allCategories, categoryId]);
-
-  const subcategories = useMemo(() => {
-    const pid = normalizeUuid(categoryId);
-    if (!pid) return [];
-    let list = allCategories.filter((c) => normalizeUuid(c.parent_id) === pid);
-    const sid = normalizeUuid(subcategoryId);
-    if (sid) {
-      const chosen = allCategories.find((c) => normalizeUuid(c.id) === sid);
-      if (chosen && !list.some((c) => normalizeUuid(c.id) === sid)) {
-        list = [...list, chosen];
-      }
-    }
-    return list.sort((a, b) => a.name.localeCompare(b.name));
-  }, [allCategories, categoryId, subcategoryId]);
+  const [promotions, setPromotions] = useState(() => coerceProductFlag(product?.promotions));
+  const [bestsellers, setBestsellers] = useState(() => coerceProductFlag(product?.bestsellers));
+  const [discounts, setDiscounts] = useState(() => coerceProductFlag(product?.discounts));
 
   useEffect(() => {
     setMainImageUrl(product?.main_image ?? "");
@@ -140,16 +102,9 @@ export function ProductForm({ product, categories: allCategories }: ProductFormP
   }, [product?.id, product?.main_image, product?.image1, product?.image2, product?.image3]);
 
   useEffect(() => {
-    const sid = normalizeUuid(product?.subcategory_id);
-    const cid = deriveCategoryIdForForm(product?.category_id, product?.subcategory_id, allCategories);
-    setSubcategoryId(sid);
-    setCategoryId(cid);
-  }, [product?.id, product?.category_id, product?.subcategory_id, allCategories]);
-
-  useEffect(() => {
-    setPromotions(Boolean(product?.promotions));
-    setBestsellers(Boolean(product?.bestsellers));
-    setDiscounts(Boolean(product?.discounts));
+    setPromotions(coerceProductFlag(product?.promotions));
+    setBestsellers(coerceProductFlag(product?.bestsellers));
+    setDiscounts(coerceProductFlag(product?.discounts));
   }, [product?.id, product?.promotions, product?.bestsellers, product?.discounts]);
 
   return (
@@ -170,11 +125,10 @@ export function ProductForm({ product, categories: allCategories }: ProductFormP
         fd.set("image1", image1Url);
         fd.set("image2", image2Url);
         fd.set("image3", image3Url);
-        fd.set("category_id", normalizeUuid(categoryId));
-        fd.set("subcategory_id", normalizeUuid(subcategoryId));
-        fd.set("promotions", promotions ? "on" : "");
-        fd.set("bestsellers", bestsellers ? "on" : "");
-        fd.set("discounts", discounts ? "on" : "");
+        fd.set("promotions", promotions ? "true" : "false");
+        fd.set("bestsellers", bestsellers ? "true" : "false");
+        fd.set("discounts", discounts ? "true" : "false");
+        console.log("[ProductForm] post submission", formDataForConsole(fd));
         startTransition(async () => {
           const action = product ? updateProductAction : createProductAction;
           const result = await action(fd);
@@ -263,6 +217,9 @@ export function ProductForm({ product, categories: allCategories }: ProductFormP
       </div>
 
       <div className="flex flex-wrap items-center gap-6">
+        <input type="hidden" name="promotions" value={promotions ? "true" : "false"} />
+        <input type="hidden" name="bestsellers" value={bestsellers ? "true" : "false"} />
+        <input type="hidden" name="discounts" value={discounts ? "true" : "false"} />
         <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
           <input
             type="checkbox"
@@ -293,55 +250,6 @@ export function ProductForm({ product, categories: allCategories }: ProductFormP
           />
           Discounts
         </label>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="category_id">Category</Label>
-          <select
-            id="category_id"
-            name="category_id"
-            value={normalizeUuid(categoryId)}
-            onChange={(e) => {
-              const v = normalizeUuid(e.target.value);
-              setCategoryId(v);
-              setSubcategoryId((prev) => {
-                const p = normalizeUuid(prev);
-                if (!v || !p) return "";
-                const stillValid = allCategories.some(
-                  (c) => normalizeUuid(c.id) === p && normalizeUuid(c.parent_id) === v
-                );
-                return stillValid ? p : "";
-              });
-            }}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value="">— None —</option>
-            {rootCategories.map((c) => (
-              <option key={c.id} value={normalizeUuid(c.id)}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="subcategory_id">Subcategory</Label>
-          <select
-            id="subcategory_id"
-            name="subcategory_id"
-            value={normalizeUuid(subcategoryId)}
-            disabled={!normalizeUuid(categoryId) && !normalizeUuid(subcategoryId)}
-            onChange={(e) => setSubcategoryId(normalizeUuid(e.target.value))}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
-          >
-            <option value="">— None —</option>
-            {subcategories.map((c) => (
-              <option key={c.id} value={normalizeUuid(c.id)}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">

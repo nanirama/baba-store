@@ -1,14 +1,9 @@
 import "server-only";
 
-import { cacheLife, cacheTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { CategoryRecord, ProductRecord } from "@/types/cms";
 
 export async function getProducts(): Promise<ProductRecord[]> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("products");
-
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("products")
@@ -20,11 +15,6 @@ export async function getProducts(): Promise<ProductRecord[]> {
 }
 
 export async function getProductById(id: string): Promise<ProductRecord | null> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("products");
-  cacheTag(`product-${id}`);
-
   const supabase = createAdminClient();
   const { data, error } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(error.message);
@@ -32,11 +22,6 @@ export async function getProductById(id: string): Promise<ProductRecord | null> 
 }
 
 export async function getProductBySlug(slug: string): Promise<ProductRecord | null> {
-  "use cache: remote";
-  cacheLife("hours");
-  cacheTag("products");
-  cacheTag(`product-slug-${slug}`);
-
   const supabase = createAdminClient();
   const { data, error } = await supabase.from("products").select("*").eq("slug", slug).maybeSingle();
 
@@ -72,10 +57,6 @@ export async function getSeeAlsoProducts(args: {
 }
 
 export async function getCategories(): Promise<CategoryRecord[]> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("categories");
-
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("categories")
@@ -88,11 +69,6 @@ export async function getCategories(): Promise<CategoryRecord[]> {
 }
 
 export async function getCategoryById(id: string): Promise<CategoryRecord | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("categories");
-  cacheTag(`category-${id}`);
-
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("categories")
@@ -105,11 +81,6 @@ export async function getCategoryById(id: string): Promise<CategoryRecord | null
 }
 
 export async function getCategoryBySlug(slug: string): Promise<CategoryRecord | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("categories");
-  cacheTag(`category-slug-${slug}`);
-
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("categories")

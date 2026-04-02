@@ -32,16 +32,20 @@ export async function getProductBySlug(slug: string): Promise<ProductRecord | nu
 /** Same parent/sub category as the current product (excludes `excludeId`). */
 export async function getSeeAlsoProducts(args: {
   excludeId: string;
-  categoryId: string | null;
-  subcategoryId: string | null;
+  categoryId: string | number | null;
+  subcategoryId: string | number | null;
   limit?: number;
 }): Promise<ProductRecord[]> {
   const limit = args.limit ?? 20;
-  const ids = [args.categoryId, args.subcategoryId].filter((x): x is string => Boolean(x));
+  const ids = [args.categoryId, args.subcategoryId].filter((x): x is string | number => {
+    if (x === null || x === undefined || x === "") return false;
+    if (typeof x === "number") return x > 0;
+    return true;
+  });
   if (ids.length === 0) return [];
 
   const supabase = createAdminClient();
-  const orParts = ids.flatMap((id) => [`category_id.eq.${id}`]);
+  const orParts = ids.flatMap((id) => [`category_id.eq.${id}`, `parent_category_id.eq.${id}`]);
 
   const { data, error } = await supabase
     .from("products")

@@ -38,10 +38,13 @@ export type ProductRecord = {
   related_products: string[] | null;
   status: ProductStatus;
   categories: string[] | null;
-  /** CMS / bulk: FK to public.categories.id — parent category (Excel Cat. 2). */
-  category_id: string | null;
-  /** CMS / bulk: FK to public.categories.id — child category under parent (Excel Cat. 1). */
-  subcategory_id: string | null;
+  /**
+   * Leaf category: main category only, OR subcategory when `parent_category_id` is set.
+   * Matches numeric `categories.category_id`.
+   */
+  category_id: number | null;
+  /** When product is in a subcategory: main category’s numeric `categories.category_id`. Otherwise null. */
+  parent_category_id: number | null;
   promotions: boolean;
   bestsellers: boolean;
   discounts: boolean;

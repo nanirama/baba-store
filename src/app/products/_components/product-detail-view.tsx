@@ -12,7 +12,7 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
   const seeAlso = await getSeeAlsoProducts({
     excludeId: product.id,
     categoryId: product.category_id,
-    subcategoryId: product.subcategory_id,
+    subcategoryId: product.parent_category_id,
     limit: 20,
   });
 

@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { createProductAction, updateProductAction } from "@/actions/products";
-import type { ProductRecord } from "@/types/cms";
+import type { CategoryRecord, ProductRecord } from "@/types/cms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,41 @@ const TipTapEditor = dynamic(
 
 type ProductFormProps = {
   product?: ProductRecord | null;
+  categories: CategoryRecord[];
 };
+
+/** Top-level categories: `parent_id` missing or 0 per `categories` table. */
+function isRootCategoryRow(c: CategoryRecord): boolean {
+  return c.parent_id == null || Number(c.parent_id) === 0;
+}
+
+function isActiveCategory(c: CategoryRecord): boolean {
+  return String(c.status ?? "").trim().toLowerCase() === "active";
+}
+
+/** Main category dropdown: `parent_category_id` if hierarchical, else `category_id`. */
+function productMainCategoryNumericIdString(product: ProductRecord | null | undefined): string {
+  const parent = product?.parent_category_id;
+  if (parent != null && Number(parent) > 0) {
+    return String(Math.trunc(Number(parent)));
+  }
+  const v = product?.category_id;
+  if (v == null) return "";
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return String(Math.trunc(n));
+}
+
+/** Subcategory dropdown: only when `parent_category_id` is set — then leaf is `category_id`. */
+function productSubcategoryNumericIdString(product: ProductRecord | null | undefined): string {
+  const parent = product?.parent_category_id;
+  if (parent == null || Number(parent) <= 0) return "";
+  const v = product?.category_id;
+  if (v == null) return "";
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return String(Math.trunc(n));
+}
 
 const defaultDescription = JSON.stringify({ type: "doc", content: [] });
 
@@ -52,7 +86,7 @@ function coerceProductFlag(v: unknown): boolean {
   return false;
 }
 
-export function ProductForm({ product }: ProductFormProps) {
+export function ProductForm({ product, categories: allCategories }: ProductFormProps) {
   const productData = product as (ProductRecord & {
     meta_title?: string | null;
     meta_description?: string | null;
@@ -93,6 +127,24 @@ export function ProductForm({ product }: ProductFormProps) {
   const [promotions, setPromotions] = useState(() => coerceProductFlag(product?.promotions));
   const [bestsellers, setBestsellers] = useState(() => coerceProductFlag(product?.bestsellers));
   const [discounts, setDiscounts] = useState(() => coerceProductFlag(product?.discounts));
+  const [categoryNumericId, setCategoryNumericId] = useState(() => productMainCategoryNumericIdString(product));
+  const [subcategoryNumericId, setSubcategoryNumericId] = useState(() =>
+    productSubcategoryNumericIdString(product)
+  );
+
+  const rootCategories = useMemo(() => {
+    return [...allCategories]
+      .filter((c) => isActiveCategory(c) && isRootCategoryRow(c))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allCategories]);
+
+  const subcategories = useMemo(() => {
+    const parentId = Number(categoryNumericId);
+    if (!Number.isFinite(parentId) || parentId <= 0) return [];
+    return [...allCategories]
+      .filter((c) => isActiveCategory(c) && Number(c.parent_id) === parentId)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allCategories, categoryNumericId]);
 
   useEffect(() => {
     setMainImageUrl(product?.main_image ?? "");
@@ -106,6 +158,11 @@ export function ProductForm({ product }: ProductFormProps) {
     setBestsellers(coerceProductFlag(product?.bestsellers));
     setDiscounts(coerceProductFlag(product?.discounts));
   }, [product?.id, product?.promotions, product?.bestsellers, product?.discounts]);
+
+  useEffect(() => {
+    setCategoryNumericId(productMainCategoryNumericIdString(product));
+    setSubcategoryNumericId(productSubcategoryNumericIdString(product));
+  }, [product?.id, product?.category_id, product?.parent_category_id]);
 
   return (
     <form
@@ -125,6 +182,9 @@ export function ProductForm({ product }: ProductFormProps) {
         fd.set("image1", image1Url);
         fd.set("image2", image2Url);
         fd.set("image3", image3Url);
+        const cat = categoryNumericId.trim();
+        fd.set("category_id", cat);
+        fd.set("subcategory_id", cat ? subcategoryNumericId.trim() : "");
         fd.set("promotions", promotions ? "true" : "false");
         fd.set("bestsellers", bestsellers ? "true" : "false");
         fd.set("discounts", discounts ? "true" : "false");
@@ -250,6 +310,56 @@ export function ProductForm({ product }: ProductFormProps) {
           />
           Discounts
         </label>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 md:max-w-3xl">
+        <div className="space-y-2">
+          <Label htmlFor="category_id">Category</Label>
+          <select
+            id="category_id"
+            name="category_id"
+            value={categoryNumericId}
+            onChange={(e) => {
+              const v = e.target.value;
+              setCategoryNumericId(v);
+              setSubcategoryNumericId((prev) => {
+                if (!v || !prev) return "";
+                const p = Number(prev);
+                const parentNum = Number(v);
+                const stillValid = allCategories.some(
+                  (c) => Number(c.category_id) === p && Number(c.parent_id) === parentNum
+                );
+                return stillValid ? prev : "";
+              });
+            }}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="">— None —</option>
+            {rootCategories.map((c) => (
+              <option key={c.id} value={String(c.category_id)}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="subcategory_id">Subcategory</Label>
+          <select
+            id="subcategory_id"
+            name="subcategory_id"
+            value={subcategoryNumericId}
+            disabled={!categoryNumericId.trim()}
+            onChange={(e) => setSubcategoryNumericId(e.target.value)}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
+          >
+            <option value="">— None —</option>
+            {subcategories.map((c) => (
+              <option key={c.id} value={String(c.category_id)}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">

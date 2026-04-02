@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/helpers";
-import { getProductById } from "@/lib/supabase/cms-queries";
+import { getCategories, getProductById } from "@/lib/supabase/cms-queries";
 import { ProductForm } from "@/components/cms/products/product-form";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 
@@ -11,7 +11,7 @@ type EditProductPageProps = {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   await requireRole("user");
   const paramsData = await params;
-  const product = await getProductById(paramsData.id);
+  const [product, categories] = await Promise.all([getProductById(paramsData.id), getCategories()]);
 
   if (!product) notFound();
 
@@ -23,7 +23,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         backHref="/dashboard/products"
         backLabel="Back to products"
       />
-      <ProductForm product={product} />
+      <ProductForm product={product} categories={categories} />
     </div>
   );
 }

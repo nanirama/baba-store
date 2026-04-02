@@ -192,6 +192,12 @@ async function parseProductFormData(formData: FormData): Promise<ProductWriteInp
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid product payload");
   }
 
+  /** Form: main → `category_id`, sub → `subcategory_id`. DB: sub chosen → leaf in `category_id`, main in `parent_category_id`. */
+  const mainCategory = parsed.data.category_id ?? null;
+  const subCategory = parsed.data.subcategory_id ?? null;
+  const category_id = subCategory != null ? subCategory : mainCategory;
+  const parent_category_id = subCategory != null ? mainCategory : null;
+
   return {
     model: parsed.data.model ?? null,
     name: parsed.data.name,
@@ -216,8 +222,8 @@ async function parseProductFormData(formData: FormData): Promise<ProductWriteInp
     manufacturer: parsed.data.manufacturer ?? null,
     related_products: parsed.data.relatedProducts ?? [],
     status: parsed.data.status,
-    category_id: parsed.data.category_id ?? null,
-    subcategory_id: parsed.data.subcategory_id ?? null,
+    category_id,
+    parent_category_id,
     categories: null,
     promotions: parsed.data.promotions,
     bestsellers: parsed.data.bestsellers,
@@ -276,9 +282,9 @@ export async function createProductAction(formData: FormData): Promise<ActionRes
 
     delete dbPayload.related_products;
 
-    // Category pickers hidden in CMS — omit so DB keeps existing / default FKs.
-    delete dbPayload.category_id;
-    delete dbPayload.subcategory_id;
+    dbPayload.category_id = payload.category_id ?? null;
+    dbPayload.parent_category_id = payload.parent_category_id ?? null;
+    delete (dbPayload as Record<string, unknown>).subcategory_id;
 
     dbPayload.promotions = Boolean(payload.promotions);
     dbPayload.bestsellers = Boolean(payload.bestsellers);
@@ -332,9 +338,9 @@ export async function updateProductAction(formData: FormData): Promise<ActionRes
 
     delete dbPayload.related_products;
 
-    // Category pickers hidden in CMS — omit so saves do not clear categories.
-    delete dbPayload.category_id;
-    delete dbPayload.subcategory_id;
+    dbPayload.category_id = payload.category_id ?? null;
+    dbPayload.parent_category_id = payload.parent_category_id ?? null;
+    delete (dbPayload as Record<string, unknown>).subcategory_id;
 
     dbPayload.promotions = Boolean(payload.promotions);
     dbPayload.bestsellers = Boolean(payload.bestsellers);

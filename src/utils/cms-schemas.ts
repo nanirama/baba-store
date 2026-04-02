@@ -14,6 +14,15 @@ export function parseTriStateBoolean(val: unknown): boolean {
 
 export const productStatusSchema = z.enum(["draft", "active", "archived"]);
 
+/** `categories.category_id` style int from form (empty → null). */
+function optionalNumericCategoryId(val: unknown): number | null {
+  if (val === "" || val === null || val === undefined) return null;
+  const n = typeof val === "number" ? val : Number(String(val).trim());
+  if (!Number.isFinite(n)) return null;
+  const i = Math.trunc(n);
+  return i > 0 ? i : null;
+}
+
 export const productMetaSchema = z
   .object({
     title: z.string().max(120).optional(),
@@ -62,14 +71,8 @@ export const productSchema = z.object({
   manufacturer: z.string().trim().max(120).optional().nullable(),
   relatedProducts: z.array(z.string().uuid()).optional(),
   status: productStatusSchema.default("draft"),
-  category_id: z.preprocess(
-    (val) => (val === "" || val === null || val === undefined ? null : val),
-    z.string().uuid().nullable().optional()
-  ),
-  subcategory_id: z.preprocess(
-    (val) => (val === "" || val === null || val === undefined ? null : val),
-    z.string().uuid().nullable().optional()
-  ),
+  category_id: z.preprocess(optionalNumericCategoryId, z.number().int().positive().nullable().optional()),
+  subcategory_id: z.preprocess(optionalNumericCategoryId, z.number().int().positive().nullable().optional()),
   promotions: z.preprocess(parseTriStateBoolean, z.boolean()),
   bestsellers: z.preprocess(parseTriStateBoolean, z.boolean()),
   discounts: z.preprocess(parseTriStateBoolean, z.boolean()),

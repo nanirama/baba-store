@@ -74,7 +74,7 @@ export function parseListingSearchParams(sp: ProductsListingRawSearchParams) {
 }
 
 /**
- * `/products?category=` filter: matches `products.category_id` / `subcategory_id` against `categories.id` (uuid).
+ * `/products?category=` filter: matches `products.category_id` / `parent_category_id` (and legacy uuid paths where present).
  * Bulk import and parent segment pages use numeric `categories.category_id` on `products.category_id` instead;
  * see `getStorefrontProductsListingByCategoryNumericId`.
  */
@@ -134,7 +134,10 @@ function applyFiltersToQuery(
   }
 
   if (category.kind === "ids" && category.ids.length > 0) {
-    const orParts = category.ids.flatMap((id) => [`category_id.eq.${id}`, `subcategory_id.eq.${id}`]);
+    const orParts = category.ids.flatMap((id) => [
+      `category_id.eq.${id}`,
+      `parent_category_id.eq.${id}`,
+    ]);
     q = q.or(orParts.join(","));
   }
 

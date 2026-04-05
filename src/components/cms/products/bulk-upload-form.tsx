@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { processBulkUploadAction, type BulkImageFailure } from "@/actions/bulk-upload";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,17 +13,27 @@ export function BulkUploadForm() {
   const [messageOk, setMessageOk] = useState(true);
   const [imageFailures, setImageFailures] = useState<BulkImageFailure[] | undefined>(undefined);
 
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      try {
+        const result = await processBulkUploadAction(formData);
+        setMessageOk(result.success);
+        setMessage(result.message ?? "");
+        setImageFailures(result.imageFailures);
+      } catch (err) {
+        setMessageOk(false);
+        setMessage(err instanceof Error ? err.message : "Bulk upload failed. Try again or use a smaller file.");
+        setImageFailures(undefined);
+      }
+    });
+  }
+
   return (
     <form
       className="space-y-4 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm sm:p-6"
-      action={(formData) => {
-        startTransition(async () => {
-          const result = await processBulkUploadAction(formData);
-          setMessageOk(result.success);
-          setMessage(result.message);
-          setImageFailures(result.imageFailures);
-        });
-      }}
+      onSubmit={onSubmit}
     >
       <h3 className="text-base font-semibold text-slate-900">Import file</h3>
       <p className="text-sm text-slate-500">
@@ -66,13 +76,16 @@ export function BulkUploadForm() {
           <p className="font-medium text-amber-950 dark:text-amber-100">Products with image errors</p>
           <ul className="mt-2 space-y-3">
             {imageFailures.map((f) => (
-              <li key={f.productId} className="border-t border-amber-200/80 pt-2 first:border-t-0 first:pt-0 dark:border-amber-800">
+              <li
+                key={`${f.productId}-${f.slug}`}
+                className="border-t border-amber-200/80 pt-2 first:border-t-0 first:pt-0 dark:border-amber-800"
+              >
                 <div>
-                  <span className="font-medium text-foreground">{f.name}</span>{" "}
-                  <span className="text-muted-foreground">({f.slug})</span>
+                  <span className="font-medium text-foreground">{f.name ?? "—"}</span>{" "}
+                  <span className="text-muted-foreground">({f.slug ?? "—"})</span>
                 </div>
                 <ul className="mt-1.5 list-inside list-disc space-y-1 text-xs text-amber-900/90 dark:text-amber-200/90">
-                  {f.errors.map((line, i) => (
+                  {(Array.isArray(f.errors) ? f.errors : []).map((line, i) => (
                     <li key={i} className="whitespace-pre-wrap">
                       {line}
                     </li>

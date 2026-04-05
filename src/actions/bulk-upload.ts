@@ -2,7 +2,7 @@
 
 import "server-only";
 
-import { revalidateTag } from "next/cache";
+import { refresh, revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/helpers";
 import { parseCsv, parseXlsx, type BulkProductInput } from "@/utils/bulk-parser";
@@ -29,6 +29,12 @@ const BULK_INLINE_IMAGES_MIN_ROWS = Math.max(
 );
 
 const BULK_FORCE_INLINE_IMAGES = process.env.BULK_FORCE_INLINE_IMAGES === "1";
+
+/** Cap rows returned to the client so the server-action response stays small (avoids client/runtime issues). */
+const MAX_IMAGE_FAILURES_IN_RESPONSE = Math.min(
+  500,
+  Math.max(50, Number(process.env.BULK_MAX_IMAGE_FAILURES_RESPONSE ?? "150") || 150)
+);
 
 /**
  * When `1`, large imports store resolved image URLs only (no Supabase copy — faster, not storage-only).
@@ -601,8 +607,18 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
     }
 
     revalidateTag("products", "max");
+    try {
+      refresh();
+    } catch {
+      /* best-effort: sync client router after mutation; import already succeeded */
+    }
 
     const imported = insertedRows.length;
+    const totalImageFailures = imageFailures.length;
+    const imageFailuresForClient =
+      imageFailures.length > MAX_IMAGE_FAILURES_IN_RESPONSE
+        ? imageFailures.slice(0, MAX_IMAGE_FAILURES_IN_RESPONSE)
+        : imageFailures;
     const toStorage = imagesUploaded - imagesKeptOriginal;
     const parts: string[] = [`Imported ${imported} product(s).`];
     if (skippedDuplicateSlug > 0) {
@@ -623,12 +639,17 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
     if (BULK_IMAGE_UPLOADS_DISABLED) {
       parts.push("Image columns are disabled — no remote fetch or storage upload.");
     } else if (imported > 0 && !useInlineResolvedUrls) {
-      if (imageFailures.length > 0) {
+      if (totalImageFailures > 0) {
         parts.push(
-          `Some image URLs failed for ${imageFailures.length} product(s) — see the list below. Successful images were still saved.`
+          `Some image URLs failed for ${totalImageFailures} product(s) — see the list below. Successful images were still saved.`
         );
+        if (totalImageFailures > imageFailuresForClient.length) {
+          parts.push(
+            `(Showing first ${imageFailuresForClient.length} of ${totalImageFailures} in the UI; raise BULK_MAX_IMAGE_FAILURES_RESPONSE or check logs for full list.)`
+          );
+        }
       }
-      if (imagesUploaded === 0 && imageFailures.length === 0) {
+      if (imagesUploaded === 0 && totalImageFailures === 0) {
         parts.push("No image URLs in file, or none could be fetched.");
       } else if (imagesUploaded > 0) {
         parts.push(`Images: ${imagesUploaded} set on products.`);
@@ -648,7 +669,7 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
       imagesUploaded,
       imagesKeptOriginal,
       skippedDuplicateSlug,
-      imageFailures: imageFailures.length > 0 ? imageFailures : undefined,
+      imageFailures: totalImageFailures > 0 ? imageFailuresForClient : undefined,
     };
   } catch (error) {
     return {

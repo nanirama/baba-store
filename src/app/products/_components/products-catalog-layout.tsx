@@ -36,6 +36,7 @@ export function ProductsCatalogLayout({
     Boolean(linkState.category) ||
     Boolean(linkState.segmentBase) ||
     Boolean(linkState.segmentChild);
+    
 
   return (
     <BaseLayout>

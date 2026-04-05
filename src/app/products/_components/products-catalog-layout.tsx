@@ -42,7 +42,7 @@ export function ProductsCatalogLayout({
       <div className="mx-auto !max-w-7xl !w-stretch product_width px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <header className="mb-8 lg:mb-10">
           <div className="flex flex-wrap items-end gap-0">
-            <h1 className="border-b-4 border-primary pb-2 font-[family-name:var(--font-heading)] text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl lg:text-4xl">
+            <h1 className="border-b-4 border-primary pb-2 font-[family-name:var(--font-heading)] font-bold tracking-tight text-gray-900 text-2xl lg:text-[39px]">
               {title}
             </h1>
             <div className="h-px min-w-[4rem] flex-1 bg-gray-200" aria-hidden />

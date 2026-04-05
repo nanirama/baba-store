@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProductsSliderClient } from "@/components/store/products-slider-client";
+import { ProductsSlider } from "@/components/store/home-products-slider";
 import { getProducts } from "@/lib/supabase/cms-queries";
 import { BaseLayout } from "@/components/Common/BaseLayout";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ export default async function RootPage() {
   return (
     <BaseLayout>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 flex flex-col items-center justify-center">
-        <button className="group  bg-[#F15A24] hover:bg-[#d94e1f] text-white text-sm font-medium uppercase px-6 py-3 rounded-sm transition-all duration-300">
+        <button className="group  bg-[#F15A24] hover:bg-[#d94e1f] text-white text-sm font-normal font-heading uppercase px-6 py-3 rounded-sm transition-all duration-300">
           <Link href="/products" className="inline-flex items-center gap-2"> ყველა პროექტი
             <svg
               className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
@@ -33,17 +33,17 @@ export default async function RootPage() {
             </svg>
           </Link>
         </button>
-        <ProductsSliderClient
+        <ProductsSlider
           heading="აქციები  "
           ariaLabel="Promotions products"
           products={promotionProducts}
         />
-        <ProductsSliderClient
+        <ProductsSlider
           heading="ბესტსელერები"
           ariaLabel="Bestsellers products"
           products={bestSellerProducts}
         />
-        <ProductsSliderClient
+        <ProductsSlider
           heading="ფასდაკლებები"
           ariaLabel="Discounts products"
           products={discountProducts}

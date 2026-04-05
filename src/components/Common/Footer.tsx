@@ -34,7 +34,7 @@ function FooterBottomStrip() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
         <div className="grid grid-cols-1 justify-items-center gap-10 text-center sm:grid-cols-2 sm:justify-items-stretch sm:text-left lg:grid-cols-4 lg:gap-8">
           {/* 1 — social, sitemap, legal, copyright */}
-          <div className="flex w-full max-w-xs flex-col items-center gap-4 sm:max-w-none sm:items-start">
+          <div className="flex w-full max-w-xs flex-col items-center gap- sm:max-w-none sm:items-start">
             <div className="flex gap-3" role="list">
               {SOCIAL.map(({ href, label, Icon }) => (
                 <a
@@ -60,7 +60,7 @@ function FooterBottomStrip() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-sm text-slate-400 transition-colors hover:text-white"
+                    className="text-xs text-slate-400 transition-colors hover:text-white"
                   >
                     {item.label}
                   </Link>
@@ -76,13 +76,13 @@ function FooterBottomStrip() {
           <div className="flex w-full max-w-xs flex-col gap-4 sm:max-w-none">
             <Link
               href="/contact"
-              className="text-base font-bold text-white underline-offset-2 transition-colors hover:text-orange-100 hover:underline"
+              className="text-xs font-bold  text-white underline-offset-2 transition-colors hover:text-orange-100 hover:underline"
             >
               ონლაინ ჩატი
             </Link>
             <div>
-              <p className="text-base font-bold text-white">მისამართი</p>
-              <address className="mt-2 text-sm not-italic leading-relaxed text-slate-400">
+              <p className="text-xs font-bold text-white">მისამართი</p>
+              <address className="mt-2 text-xs not-italic leading-relaxed text-slate-400">
                 ი. ჭავჭავაძის გამზ. 55, თბილისი 0162
               </address>
             </div>
@@ -113,13 +113,13 @@ function FooterBottomStrip() {
 
           {/* 4 — service highlights */}
           <div className="flex w-full max-w-xs flex-col gap-4 sm:max-w-none">
-            <Link href="/miwodebis-pirobebi" className="text-base font-bold text-white">უფასო მიწოდება</Link>
+            <Link href="/miwodebis-pirobebi" className="text-xs font-bold text-white">უფასო მიწოდება</Link>
             <div className="flex flex-col gap-1">
-              <Link href="/onlain-ganvadeba" className="text-base font-bold text-white">საბანკო განვადება</Link>
+              <Link href="/onlain-ganvadeba" className="text-xs font-bold text-white">საბანკო განვადება</Link>
               <p className="mt-1 text-sm text-slate-400">0% განაკვეთი 3 თვემდე</p>
             </div>
             <div className="flex flex-col gap-1">
-              <Link href="/sagarantio-pirobebi" className="text-base font-bold text-white">90 დღიანი დაბრუნება</Link>
+              <Link href="/sagarantio-pirobebi" className="text-xs font-bold text-white">90 დღიანი დაბრუნება</Link>
               <p className="mt-1 text-sm text-slate-400">პრობლემურ პროდუქტებზე</p>
             </div>
           </div>
@@ -141,23 +141,23 @@ function CategoryColumn({ parent }: { parent: CatalogCategoryParent }) {
   const parentHref = parentCategoryHref(parent.slug);
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby={`footer-cat-${parent.id}`}>
+    <section className="flex flex-col gap-0 font-heading" aria-labelledby={`footer-cat-${parent.id}`}>
       <h3
         id={`footer-cat-${parent.id}`}
-        className="inline-block max-w-full self-start border-b-2 border-orange-500 pb-1.5 text-base font-bold leading-tight text-white"
+        className="inline-block max-w-full self-start border-b-2 mb-2 border-orange-500 pb-1.5 text-sm font-normal leading-tight text-white"
       >
-        <Link href={parentHref} className="transition-colors hover:text-orange-50">
+        <Link href={parentHref} className="transition-colors  hover:text-orange-50">
           {parent.name}
         </Link>
       </h3>
 
       {parent.children.length > 0 ? (
-        <ul className="flex flex-col gap-2">
-          {parent.children.map((c) => (
+        <ul className="flex flex-col gap-0">
+          {parent.children.slice(0, 4).map((c) => (
             <li key={c.id}>
               <Link
                 href={childCategoryHref(parent.slug, c.slug)}
-                className="text-sm text-slate-300 transition-colors hover:text-white"
+                className="text-[13px] font-heading text-white transition-colors hover:text-white"
               >
                 {c.name}
               </Link>
@@ -168,7 +168,7 @@ function CategoryColumn({ parent }: { parent: CatalogCategoryParent }) {
 
       <Link
         href={parentHref}
-        className="mt-1 text-sm font-bold text-white underline decoration-white underline-offset-4 transition-colors hover:text-orange-100"
+        className="mt-1 text-xs font-heading font-semibold text-white underline decoration-white underline-offset-4 transition-colors hover:text-orange-100"
       >
         ყველას ნახვა
       </Link>
@@ -177,7 +177,7 @@ function CategoryColumn({ parent }: { parent: CatalogCategoryParent }) {
 }
 
 export async function Footer() {
-  const parents = await loadCategories();
+  const parents = (await loadCategories()).filter((p) => p.children.length > 0);
 
   return (
     <footer className="mt-auto bg-[#2d3748] text-slate-300">

@@ -104,7 +104,7 @@ function SidebarParent({
 
   if (parent.children.length === 0) {
     return (
-      <div className="border-b border-gray-200">
+      <div className="bg-transparent">
         <Link
           href={parentHref}
           className={`flex items-center gap-3 py-3.5 pr-1 transition-colors hover:bg-transparent ${parentOnlyActive ? "bg-transparent" : ""
@@ -118,8 +118,8 @@ function SidebarParent({
   }
 
   return (
-    <div className="border-b border-gray-200 bg-transparent">
-      <div className="group flex items-center gap-2 py-1.5 pr-1">
+    <div className="bg-transparent">
+      <div className="group flex items-center gap-0 py-1 pr-1">
 
         <Link
           href={parentHref}

@@ -1,11 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { ProductsSliderProps } from "@/components/store/products-slider";
+import type { ProductsSliderProps } from "@/components/store/home-products-slider";
 
 const ProductsSliderLazy = dynamic(
   () =>
-    import("@/components/store/products-slider").then((m) => ({
+    import("@/components/store/home-products-slider").then((m) => ({
       default: m.ProductsSlider,
     })),
   { ssr: false, loading: () => null }

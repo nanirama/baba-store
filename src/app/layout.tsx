@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Oswald } from "next/font/google";
+import localFont from "next/font/local"; // ✅ correct
 import "./globals.css";
 
-const oswald = Oswald({
-  subsets: ["latin"],
-  weight: ["700"],
-  display: "swap",
-  variable: "--font-heading",
-});
+// const oswald = Oswald({
+//   subsets: ["latin"],
+//   weight: ["700"],
+//   display: "swap",
+//   variable: "--font-heading",
+// });
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -15,6 +16,19 @@ const montserrat = Montserrat({
   display: "swap",
   variable: "--font-body",
 });
+
+const helveticaNeue = localFont({
+  src: [
+    {
+      path: "../../public/fonts/HelveticaNeue-Roman.woff2",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-heading", // ✅ FIXED
+  display: "swap",
+});
+
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://baba.ge"),
@@ -128,7 +142,7 @@ export default function RootLayout({
     <html
       lang="ka"
       suppressHydrationWarning
-      className={`${montserrat.variable} ${oswald.variable}`}
+      className={`${montserrat.variable} ${helveticaNeue.variable}`}
     >
       <body>
         <script

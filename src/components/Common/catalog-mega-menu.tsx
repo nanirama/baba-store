@@ -106,7 +106,7 @@ export function CatalogMegaMenu({ parents }: CatalogMegaMenuProps) {
         onClick={() => setOpen((v) => !v)}
       >
         <Grid3x3 className="h-5 w-5 shrink-0" aria-hidden />
-        <span className="text-[15px] font-medium tracking-tight ">კატალოგი</span>
+        <span className="text-[15px] font-medium uppercase tracking-tight">კატალოგი</span>
         <ChevronDown
           className={cn(
             "h-4 w-4 shrink-0 transition-transform duration-200",

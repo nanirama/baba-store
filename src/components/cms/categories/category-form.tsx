@@ -49,6 +49,8 @@ export function CategoryForm({ category, allCategories }: CategoryFormProps) {
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState(category?.name ?? "");
   const [slug, setSlug] = useState(category?.slug ?? "");
+  /** New category: stop auto-filling slug from name after user edits slug. */
+  const [slugTouched, setSlugTouched] = useState(false);
   const [categoryId, setCategoryId] = useState(String(category?.category_id ?? 0));
   const [parentId, setParentId] = useState(String(category?.parent_id ?? 0));
   const [description, setDescription] = useState(toEditorDescription(category?.description));
@@ -61,7 +63,6 @@ export function CategoryForm({ category, allCategories }: CategoryFormProps) {
   const [message, setMessage] = useState("");
 
   const isEdit = Boolean(category?.id);
-  const autoSlug = slugify(name);
 
   const invalidParentIds = useMemo(() => {
     if (!category) return new Set<number>();
@@ -95,18 +96,23 @@ export function CategoryForm({ category, allCategories }: CategoryFormProps) {
     setSortOrder(String(category?.sort_order ?? 0));
     setStatus(category?.status ?? "active");
     setIcon(category?.icon ?? "");
+    setSlugTouched(false);
   }, [category, allCategories]);
 
   function onNameChange(value: string) {
     setName(value);
-    if (!isEdit || slug === category?.slug) setSlug(slugify(value));
+    if (isEdit) {
+      if (slug === category?.slug) setSlug(slugify(value));
+    } else if (!slugTouched) {
+      setSlug(slugify(value));
+    }
   }
 
   function onSubmit() {
     const formData = new FormData();
     if (category?.id) formData.set("id", category.id);
     formData.set("name", name);
-    formData.set("slug", isEdit ? slugify(slug || name) : autoSlug);
+    formData.set("slug", slugify(slug || name));
     formData.set("category_id", categoryId.trim() || "0");
     formData.set("parent_id", parentId.trim() || "0");
     formData.set("description", description);
@@ -140,11 +146,11 @@ export function CategoryForm({ category, allCategories }: CategoryFormProps) {
           <Input
             id="slug"
             name="slug"
-            value={isEdit ? slug : autoSlug}
+            value={slug}
             onChange={(e) => {
-              if (isEdit) setSlug(e.target.value);
+              setSlugTouched(true);
+              setSlug(e.target.value);
             }}
-            readOnly={!isEdit}
             required
           />
         </div>

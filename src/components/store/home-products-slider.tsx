@@ -60,16 +60,16 @@ export function ProductsSlider({
 }: ProductsSliderProps) {
   if (products.length === 0) return null;
 
-  const desktopCols = Math.min(4, products.length);
+  const desktopCols = Math.min(5, products.length);
 
   return (
 
     <div className={cn("mx-auto min-w-0 max-w-[1440px] px-4 sm:px-6 lg:px-8", contentClassName)}>
-      <h2 className="my-6  inline-block font-[family-name:var(--font-heading)] text-lg font-semibold uppercase tracking-wide text-neutral-800 sm:mb-8 sm:text-xl">
+      <h2 className="relative my-6 inline-block font-[family-name:var(--font-heading)] text-sm font-[600] capitalize tracking-wide text-neutral-800 sm:mb-8 after:content-[''] after:absolute after:left-0 after:-bottom-2.5 after:h-[1px] after:w-[50px] after:bg-orange-500">
         {heading}
       </h2>
 
-      <div className="products-slider-root min-w-0">
+      <div className="products-slider-root min-w-0 home_slider">
         <Slider
           dots
           arrows

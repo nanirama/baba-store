@@ -35,7 +35,7 @@ export function ProductCard({ product }: { product: ProductRecord }) {
             </div>
           )}
         </div>
-        <h2 className="line-clamp-1 px-4 pb-4 pt-2 text-left text-sm font-medium leading-snug text-gray-900">
+        <h2 className="line-clamp-1 px-4 pb-4 pt-2 text-left text-xs font-medium leading-snug text-gray-900">
           {product.name}
         </h2>
       </Link>

@@ -48,11 +48,16 @@ export function getDescendantIds(flat: CategoryRecord[], rootCategoryId: number)
     byParent.get(p)!.push(c.category_id);
   }
   const out = new Set<number>();
+  const seen = new Set<number>();
   const stack = [...(byParent.get(rootCategoryId) ?? [])];
   while (stack.length) {
     const cid = stack.pop()!;
+    if (seen.has(cid)) continue;
+    seen.add(cid);
     out.add(cid);
-    for (const child of byParent.get(cid) ?? []) stack.push(child);
+    for (const child of byParent.get(cid) ?? []) {
+      if (!seen.has(child)) stack.push(child);
+    }
   }
   return out;
 }

@@ -110,6 +110,96 @@ function resolveBulkGalleryImageUrl(raw: string | null | undefined): string | nu
   return `${BULK_GALLERY_CACHE_BASE}/${path}`;
 }
 
+/** `path/to/file.jpg` → `path/to/file-1100x1000w.jpg` (OpenCart cache naming). */
+function buildGalleryResizedCachePath(relativePath: string): string | null {
+  const path = relativePath.replace(/^\/+/, "");
+  if (!path) return null;
+  const lastSlash = path.lastIndexOf("/");
+  const file = lastSlash >= 0 ? path.slice(lastSlash + 1) : path;
+  const dir = lastSlash >= 0 ? path.slice(0, lastSlash + 1) : "";
+  const lastDot = file.lastIndexOf(".");
+  if (lastDot <= 0) return null;
+  const base = file.slice(0, lastDot);
+  const ext = file.slice(lastDot + 1);
+  if (!base || !ext) return null;
+  return `${dir}${base}-1100x1000w.${ext}`;
+}
+
+const BABA_GALLERY_PROBE_HEADERS: Record<string, string> = {
+  Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  Referer: `${BULK_IMAGE_SITE_BASE}/`,
+  Origin: BULK_IMAGE_SITE_BASE,
+};
+
+/**
+ * For bulk gallery columns: first `https://baba.ge/image/cache/` + field value; if not reachable,
+ * then `.../basename-1100x1000w.ext` (same dir, extension from the filename).
+ * Returns the first URL that responds OK, or null.
+ */
+async function resolveGalleryBulkDownloadUrl(raw: string | null | undefined): Promise<string | null> {
+  const s = String(raw ?? "").trim();
+  if (!s) return null;
+
+  let primary: string;
+  let resized: string | null = null;
+
+  if (/^https?:\/\//i.test(s)) {
+    primary = s;
+    try {
+      const u = new URL(s);
+      const host = u.hostname.replace(/^www\./i, "");
+      if (host === "baba.ge" || host.endsWith(".baba.ge")) {
+        const pathname = u.pathname.replace(/^\/+/, "");
+        const cachePrefix = "image/cache/";
+        const rel = pathname.startsWith(cachePrefix) ? pathname.slice(cachePrefix.length) : pathname;
+        const alt = buildGalleryResizedCachePath(rel);
+        if (alt) resized = `${u.origin}/${cachePrefix}${alt}`;
+      }
+    } catch {
+      resized = null;
+    }
+  } else {
+    const path = s.replace(/^\/+/, "");
+    if (!path) return null;
+    primary = `${BULK_GALLERY_CACHE_BASE}/${path}`;
+    const alt = buildGalleryResizedCachePath(path);
+    resized = alt ? `${BULK_GALLERY_CACHE_BASE}/${alt}` : null;
+  }
+
+  async function reachable(url: string): Promise<boolean> {
+    try {
+      let r = await fetch(url, { method: "HEAD", redirect: "follow", headers: BABA_GALLERY_PROBE_HEADERS });
+      if (r.ok) return true;
+      if (r.status === 403 || r.status === 401) {
+        r = await fetch(url, {
+          method: "GET",
+          redirect: "follow",
+          headers: { ...BABA_GALLERY_PROBE_HEADERS, Range: "bytes=0-0" },
+        });
+        return r.ok;
+      }
+      // Some hosts omit HEAD or return 404 while GET serves the file.
+      if (r.status === 404 || r.status === 405) {
+        r = await fetch(url, {
+          method: "GET",
+          redirect: "follow",
+          headers: { ...BABA_GALLERY_PROBE_HEADERS, Range: "bytes=0-1023" },
+        });
+        return r.ok;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  if (await reachable(primary)) return primary;
+  if (resized && resized !== primary && (await reachable(resized))) return resized;
+  return null;
+}
+
 /**
  * Excel Cat. 2 = parent name, Cat. 1 = child name. Legacy "categories" column: first = parent, second = child.
  */
@@ -431,6 +521,37 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
         }
       }
 
+      /** Image 1–3: probe baba.ge/cache original then `-1100x1000w` variant, then upload to Supabase. */
+      async function uploadGallerySlotSafe(
+        raw: string | null,
+        label: string,
+        slotErrors: string[]
+      ): Promise<string | null> {
+        const trimmed = String(raw ?? "").trim();
+        if (!trimmed) return null;
+        if (bulkFetchCount > 0 && bulkFetchDelayMs > 0) {
+          await new Promise((r) => setTimeout(r, bulkFetchDelayMs));
+        }
+        bulkFetchCount += 1;
+        const normalized = await resolveGalleryBulkDownloadUrl(trimmed);
+        if (!normalized) {
+          slotErrors.push(`${label}: not found at cache path or -1100x1000w variant`);
+          return null;
+        }
+        try {
+          return await uploadImageFromUrl(normalized, "products");
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          const blocked = /403|401/.test(msg);
+          if (blocked && BULK_KEEP_ORIGINAL_ON_BLOCKED_FETCH) {
+            imagesKeptOriginal += 1;
+            return normalized;
+          }
+          slotErrors.push(`${label}: ${msg}`);
+          return null;
+        }
+      }
+
       for (const { id, rowIndex } of insertedRows) {
         const src = rows[rowIndex];
         const mainSrc = src.mainImage ?? null;
@@ -442,11 +563,11 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
         let uMain: string | null = null;
         if (mainSrc) uMain = await uploadOneSafe(mainSrc, "Main image", slotErrors, resolveBulkImageUrl);
         let u1: string | null = null;
-        if (slots[0]) u1 = await uploadOneSafe(slots[0], "Image 1", slotErrors, resolveBulkGalleryImageUrl);
+        if (slots[0]) u1 = await uploadGallerySlotSafe(slots[0], "Image 1", slotErrors);
         let u2: string | null = null;
-        if (slots[1]) u2 = await uploadOneSafe(slots[1], "Image 2", slotErrors, resolveBulkGalleryImageUrl);
+        if (slots[1]) u2 = await uploadGallerySlotSafe(slots[1], "Image 2", slotErrors);
         let u3: string | null = null;
-        if (slots[2]) u3 = await uploadOneSafe(slots[2], "Image 3", slotErrors, resolveBulkGalleryImageUrl);
+        if (slots[2]) u3 = await uploadGallerySlotSafe(slots[2], "Image 3", slotErrors);
 
         if (slotErrors.length > 0) {
           imageFailures.push({

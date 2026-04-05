@@ -22,9 +22,15 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
   return (
     <BaseLayout>
       <div className="mx-auto max-w-[1440px] px-4 py-8 lg:py-10">
+        <div className="flex flex-wrap items-end gap-0">
+          <h1 className="border-b-4 border-primary pb-2 font-[family-name:var(--font-heading)] font-bold tracking-tight text-gray-900 text-2xl mb-6">{product.name}</h1>
+          <div className="h-px min-w-[4rem] flex-1 bg-gray-200" aria-hidden="true"></div>
+        </div>
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start lg:gap-y-10">
           <div className="lg:col-span-9 grid md:grid-cols-2 gap-8">
             <div className="mx-auto w-full rounded-lg border border-neutral-200 bg-white shadow-sm lg:mx-0">
+
               {product.main_image ? (
                 <div className="relative aspect-square w-full">
                   <Image
@@ -64,9 +70,7 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
                 ) : null}
               </div>
 
-              <h1 className="border-b-4 border-primary pb-2 font-[family-name:var(--font-heading)] text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl lg:text-3xl">
-                {product.name}
-              </h1>
+
 
               {hasDescription ? (
                 <div className="border-t border-neutral-200 pt-5">
@@ -87,13 +91,13 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
       </div>
       {seeAlso.length > 0 ? (
         <section
-        className={"mt-14 border-t border-neutral-200/80 bg-[#f4f4f4] py-10 sm:mt-16 sm:py-12 lg:mt-16"}
-      >
-        <ProductsSliderClient
-          ariaLabel="See also"
-          heading={<span className="border-b-4 border-primary pb-1">SEE ALSO</span>}
-          products={seeAlso}
-        />
+          className={"mt-14 border-t border-neutral-200/80 bg-[#f4f4f4] py-10 sm:mt-16 sm:py-12 lg:mt-16"}
+        >
+          <ProductsSliderClient
+            ariaLabel="See also"
+            heading={<span className="">SEE ALSO</span>}
+            products={seeAlso}
+          />
         </section>
       ) : null}
     </BaseLayout>

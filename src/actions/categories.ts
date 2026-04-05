@@ -186,17 +186,41 @@ export async function updateCategoryAction(formData: FormData): Promise<ActionRe
 export async function deleteCategoryAction(id: string): Promise<ActionResult> {
   await requireRole("user");
   const supabase = createAdminClient();
-  const { data: cur } = await supabase.from("categories").select("category_id").eq("id", id).maybeSingle();
-  if (!cur?.category_id) return { success: false, message: "Category not found." };
+  const { data: cur, error: curErr } = await supabase
+    .from("categories")
+    .select("category_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (curErr) return { success: false, message: curErr.message };
+  if (!cur || cur.category_id == null) {
+    return { success: false, message: "Category not found." };
+  }
+  const cid = cur.category_id;
+
   const { data: child } = await supabase
     .from("categories")
     .select("id")
-    .eq("parent_id", cur.category_id)
+    .eq("parent_id", cid)
     .limit(1)
     .maybeSingle();
   if (child) {
     return { success: false, message: "Move or delete subcategories first." };
   }
+
+  const { data: productRef, error: prodErr } = await supabase
+    .from("products")
+    .select("id")
+    .or(`category_id.eq.${cid},parent_category_id.eq.${cid}`)
+    .limit(1)
+    .maybeSingle();
+  if (prodErr) return { success: false, message: prodErr.message };
+  if (productRef) {
+    return {
+      success: false,
+      message: "Cannot delete: one or more products use this category. Reassign or remove them first.",
+    };
+  }
+
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) return { success: false, message: error.message };
 

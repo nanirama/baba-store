@@ -63,16 +63,25 @@
     font-family: var(--font-body), "Montserrat", sans-serif;
   }
 
-  h1,
+  /* h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    font-family: var(--font-heading), "Oswald", sans-serif;
+    font-family: var(--font-heading), "Oswald", sans-serif; 
     font-weight: 500;
     letter-spacing: 0.01em;
-  }
+  } */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), "Helvetica", "Arial", sans-serif;
+}
 
   p {
     font-family: var(--font-body), "Montserrat", sans-serif;
@@ -87,7 +96,8 @@
     font-family: var(--font-body), "Montserrat", sans-serif;
   }
 }
-.text-muted-foreground{
+
+.text-muted-foreground {
   color: #000000;
 }
 
@@ -135,16 +145,42 @@
   margin: 0.25rem 0;
 }
 
-.page_ttl:after {width: 100%; height: 1px; background-color: #E2E2E2; content: ""; position: absolute; left: 0; bottom: 24px;}
+.page_ttl:after {
+  width: 100%;
+  height: 1px;
+  background-color: #E2E2E2;
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 24px;
+}
 
 /* global.css */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE & Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  /* IE & Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
-.product_width {width: stretch !important;
+.product_width {
+  width: stretch !important;
 }
+
+.home_slider .slick-dots li button:before {
+  width: 8px;
+  height: 8px;
+  background-color: black !important;
+  border-radius: inherit !important;
+}
+
+.home_slider .slick-dots li.slick-active button:before {
+  background-color: #007aff !important;
+}
+
+
+.text-sm {font-size: 14px;}

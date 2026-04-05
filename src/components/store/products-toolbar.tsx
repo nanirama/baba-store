@@ -47,12 +47,12 @@ export function ProductsToolbar({ state }: { state: ProductsListingLinkState }) 
           დალაგება
         </label>
         <div className="flex min-w-0 overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm">
-          <span className="flex shrink-0 items-center bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800">
+          <span className="flex shrink-0 items-center bg-gray-100 px-3 py-2 text-xs font-medium text-gray-800">
             დალაგება:
           </span>
           <select
             id="product-sort"
-            className="min-h-[42px] min-w-0 flex-1 border-0 bg-transparent py-2 pl-3 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+            className="min-h-[42px] min-w-0 flex-1 border-0 bg-transparent py-2 pl-3 pr-10 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
             value={state.sort}
             onChange={(e) =>
               push(mergeListingParams(state, { sort: e.target.value, page: 1 }))
@@ -72,12 +72,12 @@ export function ProductsToolbar({ state }: { state: ProductsListingLinkState }) 
           ერთ გვერდზე ჩვენება
         </label>
         <div className="flex overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm">
-          <span className="flex shrink-0 items-center bg-gray-100 px-3 py-2 text-sm font-medium text-gray-800">
+          <span className="flex shrink-0 items-center bg-gray-100 px-3 py-2 text-xs font-medium text-gray-800">
             მაჩვენე:
           </span>
           <select
             id="product-per"
-            className="min-h-[42px] w-full min-w-[5rem] border-0 bg-transparent py-2 pl-3 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary sm:w-28"
+            className="min-h-[42px] w-full min-w-[5rem] border-0 bg-transparent py-2 pl-3 pr-10 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary sm:w-28"
             value={state.per}
             onChange={(e) =>
               push(mergeListingParams(state, { per: e.target.value, page: 1 }))

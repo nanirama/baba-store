@@ -12,6 +12,8 @@ import {
 } from "@/utils/category-tree";
 import { deleteCategoryAction } from "@/actions/categories";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type CategoryAdminTreeProps = {
   categories: CategoryRecord[];
@@ -35,21 +37,49 @@ function* walkTree(
   }
 }
 
+/** Keep branches that match name/slug or contain a matching descendant; parent match shows full subtree. */
+function filterCategoryTree(nodes: CategoryTreeNode[], query: string): CategoryTreeNode[] {
+  const term = query.trim().toLowerCase();
+  if (!term) return nodes;
+
+  const out: CategoryTreeNode[] = [];
+  for (const node of nodes) {
+    const selfMatch =
+      node.name.toLowerCase().includes(term) || node.slug.toLowerCase().includes(term);
+    const childFiltered = filterCategoryTree(node.children, query);
+
+    if (selfMatch) {
+      out.push({ ...node, children: node.children });
+    } else if (childFiltered.length > 0) {
+      out.push({ ...node, children: childFiltered });
+    }
+  }
+  return out;
+}
+
 export function CategoryAdminTree({ categories, productCounts = {} }: CategoryAdminTreeProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [search, setSearch] = useState("");
+  const [actionFeedback, setActionFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const activeCategories = useMemo(() => categories.filter((c) => isActiveStatus(c.status)), [categories]);
   const roots = useMemo(() => buildCategoryTree(activeCategories), [activeCategories]);
+
+  const displayRoots = useMemo(
+    () => filterCategoryTree(roots, search),
+    [roots, search]
+  );
 
   const [expanded, setExpanded] = useState<Set<string>>(() =>
     collectIdsWithChildren(buildCategoryTree(categories.filter((c) => isActiveStatus(c.status))))
   );
 
   useEffect(() => {
-    setExpanded(new Set(collectIdsWithChildren(roots)));
-  }, [roots]);
+    const tree = search.trim() ? displayRoots : roots;
+    setExpanded(new Set(collectIdsWithChildren(tree)));
+  }, [roots, displayRoots, search]);
 
-  const rows = useMemo(() => Array.from(walkTree(roots, 0, expanded)), [roots, expanded]);
+  const rows = useMemo(() => Array.from(walkTree(displayRoots, 0, expanded)), [displayRoots, expanded]);
 
   function toggle(id: string) {
     setExpanded((prev) => {
@@ -75,7 +105,37 @@ export function CategoryAdminTree({ categories, productCounts = {} }: CategoryAd
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="space-y-4">
+      {actionFeedback ? (
+        <p
+          role="status"
+          className={
+            actionFeedback.ok
+              ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900"
+              : "rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-900"
+          }
+        >
+          {actionFeedback.text}
+        </p>
+      ) : null}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="w-full max-w-md space-y-1.5">
+          <Label htmlFor="category-admin-search" className="text-slate-700">
+            Search
+          </Label>
+          <Input
+            id="category-admin-search"
+            type="search"
+            placeholder="Filter by name or slug…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            autoComplete="off"
+            className="bg-white"
+          />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
       <table className="w-full min-w-[520px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50/90">
@@ -94,6 +154,13 @@ export function CategoryAdminTree({ categories, productCounts = {} }: CategoryAd
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="px-5 py-10 text-center text-sm text-slate-500">
+                No categories match &quot;{search.trim()}&quot;.
+              </td>
+            </tr>
+          ) : null}
           {rows.map(({ node, depth }) => {
             const hasChildren = node.children.length > 0;
             const isOpen = expanded.has(node.id);
@@ -149,9 +216,17 @@ export function CategoryAdminTree({ categories, productCounts = {} }: CategoryAd
                       type="button"
                       disabled={isPending}
                       onClick={() => {
-                        startTransition(async () => {
-                          const result = await deleteCategoryAction(node.id);
-                          if (result.success) router.refresh();
+                        setActionFeedback(null);
+                        startTransition(() => {
+                          void (async () => {
+                            const result = await deleteCategoryAction(node.id);
+                            if (result.success) {
+                              setActionFeedback({ ok: true, text: result.message });
+                              router.refresh();
+                            } else {
+                              setActionFeedback({ ok: false, text: result.message });
+                            }
+                          })();
                         });
                       }}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-red-500 text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50"
@@ -166,6 +241,7 @@ export function CategoryAdminTree({ categories, productCounts = {} }: CategoryAd
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

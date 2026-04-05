@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { processBulkUploadAction, type BulkImageFailure } from "@/actions/bulk-upload";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,8 +42,16 @@ export function BulkUploadForm() {
         type="submit"
         className="bg-[#ff5100] font-medium text-white shadow-sm hover:bg-[#ff5100]/90"
         disabled={isPending}
+        aria-busy={isPending}
       >
-        {isPending ? "Uploading..." : "Upload File"}
+        {isPending ? (
+          <>
+            <Loader2 className="animate-spin" aria-hidden />
+            Uploading…
+          </>
+        ) : (
+          "Upload File"
+        )}
       </Button>
       {message && (
         <p className={`text-sm whitespace-pre-wrap ${messageOk ? "text-slate-600" : "text-destructive"}`}>

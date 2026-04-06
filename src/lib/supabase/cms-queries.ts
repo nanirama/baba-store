@@ -3,15 +3,56 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { CategoryRecord, ProductRecord } from "@/types/cms";
 
+/** PostgREST default `max-rows` is 1000; fetch in pages to load the full table. */
+const PRODUCTS_PAGE_SIZE = 1000;
+
 export async function getProducts(): Promise<ProductRecord[]> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const all: ProductRecord[] = [];
+  let offset = 0;
 
-  if (error) throw new Error(error.message);
-  return (data ?? []) as ProductRecord[];
+  for (;;) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + PRODUCTS_PAGE_SIZE - 1);
+
+    if (error) throw new Error(error.message);
+    const batch = (data ?? []) as ProductRecord[];
+    all.push(...batch);
+    if (batch.length < PRODUCTS_PAGE_SIZE) break;
+    offset += PRODUCTS_PAGE_SIZE;
+  }
+
+  return all;
+}
+
+/** Slugs for `/products/[slug]` — indexed, lightweight, paginated (same row cap as `getProducts`). */
+export async function getProductSitemapEntries(): Promise<{ slug: string; updated_at: string }[]> {
+  const supabase = createAdminClient();
+  const all: { slug: string; updated_at: string }[] = [];
+  let offset = 0;
+
+  for (;;) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("slug, updated_at")
+      .eq("status", "active")
+      .not("slug", "is", null)
+      .neq("slug", "")
+      .order("id", { ascending: true })
+      .range(offset, offset + PRODUCTS_PAGE_SIZE - 1);
+
+    if (error) throw new Error(error.message);
+    const batch = (data ?? []) as { slug: string; updated_at: string }[];
+    all.push(...batch);
+    if (batch.length < PRODUCTS_PAGE_SIZE) break;
+    offset += PRODUCTS_PAGE_SIZE;
+  }
+
+  return all;
 }
 
 export async function getProductById(id: string): Promise<ProductRecord | null> {

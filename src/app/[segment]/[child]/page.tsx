@@ -7,6 +7,7 @@ import { getStorefrontChildCategoryBySlugs } from "@/lib/supabase/categories";
 import {
   emptyProductsListing,
   getStorefrontProductsListingByCategoryNumericId,
+  getStorefrontProductsPriceBounds,
   parseListingSearchParams,
 } from "@/lib/supabase/products-listing";
 import {
@@ -70,9 +71,19 @@ export default async function ChildCategoryPage({ params, searchParams }: PagePr
 
   const { child: childCat } = row;
 
-  const { q, sort, per, page } = parseListingSearchParams(sp);
+  const { q, sort, per, page, minPrice, maxPrice } = parseListingSearchParams(sp);
 
   const numericCategoryId = Number(childCat.category_id);
+
+  let priceBounds = { min: 0, max: 0 };
+  if (Number.isFinite(numericCategoryId) && numericCategoryId > 0) {
+    try {
+      priceBounds = await getStorefrontProductsPriceBounds({ categoryId: numericCategoryId, q });
+    } catch {
+      /* ignore */
+    }
+  }
+
   const listing =
     Number.isFinite(numericCategoryId) && numericCategoryId > 0
       ? await getStorefrontProductsListingByCategoryNumericId({
@@ -81,6 +92,8 @@ export default async function ChildCategoryPage({ params, searchParams }: PagePr
           sort,
           page,
           perPage: per,
+          minPrice,
+          maxPrice,
         })
       : emptyProductsListing(per);
 
@@ -91,6 +104,8 @@ export default async function ChildCategoryPage({ params, searchParams }: PagePr
     page: listing.page,
     segmentBase: segment,
     segmentChild: child,
+    minPrice,
+    maxPrice,
   };
 
   const descText = descriptionToText(childCat.description);
@@ -160,6 +175,7 @@ export default async function ChildCategoryPage({ params, searchParams }: PagePr
         title={childCat.name}
         listing={listing}
         linkState={linkState}
+        priceBounds={priceBounds}
         categorySlug={segment}
         childSlug={child}
         sidebarLinkMode="root"

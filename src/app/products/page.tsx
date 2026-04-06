@@ -4,6 +4,7 @@ import { ProductsCatalogPage } from "@/app/products/_components/products-catalog
 import {
   firstSearchParam,
   getProductsListing,
+  getProductsPriceBoundsForListing,
   parseListingSearchParams,
   sanitizeSearchQuery,
 } from "@/lib/supabase/products-listing";
@@ -32,7 +33,14 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export default async function ProductsPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const { q, sort, per, page, category } = parseListingSearchParams(sp);
+  const { q, sort, per, page, category, minPrice, maxPrice } = parseListingSearchParams(sp);
+
+  let priceBounds = { min: 0, max: 0 };
+  try {
+    priceBounds = await getProductsPriceBoundsForListing({ categorySlug: category, q });
+  } catch {
+    /* ignore */
+  }
 
   const listing = await getProductsListing({
     q,
@@ -40,6 +48,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     sort,
     page,
     perPage: per,
+    minPrice,
+    maxPrice,
   });
 
   const linkState: ProductsListingLinkState = {
@@ -48,6 +58,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     sort,
     per: String(listing.perPage),
     page: listing.page,
+    minPrice,
+    maxPrice,
   };
 
   return (
@@ -55,6 +67,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       title="ყველა პროდუქტი"
       listing={listing}
       linkState={linkState}
+      priceBounds={priceBounds}
       categorySlug={category}
     />
   );

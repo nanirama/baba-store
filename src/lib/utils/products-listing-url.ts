@@ -13,6 +13,9 @@ export type ProductsListingLinkState = {
   sort: string;
   per: string;
   page: number;
+  /** GEL — URL `min_price` / `max_price`. */
+  minPrice?: number;
+  maxPrice?: number;
 };
 
 const DEFAULT_SORT = "default";
@@ -27,6 +30,8 @@ export function buildProductsListingHref(overrides: Partial<ProductsListingLinkS
   sort?: string;
   per?: string;
   page?: number;
+  minPrice?: number;
+  maxPrice?: number;
 }): string {
   const p = new URLSearchParams();
   if (overrides.q) p.set("q", overrides.q);
@@ -36,6 +41,8 @@ export function buildProductsListingHref(overrides: Partial<ProductsListingLinkS
   if (per !== DEFAULT_PER) p.set("per", per);
   const page = overrides.page ?? 1;
   if (page !== 1) p.set("page", String(page));
+  if (overrides.minPrice != null) p.set("min_price", String(overrides.minPrice));
+  if (overrides.maxPrice != null) p.set("max_price", String(overrides.maxPrice));
   const qs = p.toString();
 
   const segmentBase = overrides.segmentBase?.trim();
@@ -67,7 +74,16 @@ export function mergeListingParams(
   patch: Partial<
     Pick<
       ProductsListingLinkState,
-      "sort" | "per" | "page" | "category" | "categoryParent" | "segmentBase" | "segmentChild" | "q"
+      | "sort"
+      | "per"
+      | "page"
+      | "category"
+      | "categoryParent"
+      | "segmentBase"
+      | "segmentChild"
+      | "q"
+      | "minPrice"
+      | "maxPrice"
     >
   >
 ): ProductsListingLinkState {
@@ -80,6 +96,8 @@ export function mergeListingParams(
     sort: patch.sort ?? base.sort,
     per: patch.per ?? base.per,
     page: patch.page ?? base.page,
+    minPrice: "minPrice" in patch ? patch.minPrice : base.minPrice,
+    maxPrice: "maxPrice" in patch ? patch.maxPrice : base.maxPrice,
   };
 }
 
@@ -93,5 +111,7 @@ export function toHref(state: ProductsListingLinkState): string {
     sort: state.sort,
     per: state.per,
     page: state.page,
+    minPrice: state.minPrice,
+    maxPrice: state.maxPrice,
   });
 }

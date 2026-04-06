@@ -6,6 +6,7 @@ export type ProductsCatalogPageProps = {
   title: string;
   listing: ProductsListingResult;
   linkState: ProductsListingLinkState;
+  priceBounds: { min: number; max: number };
   /** Sidebar: active parent (`/products/{slug}` or `/{slug}`). */
   categorySlug?: string;
   /** Sidebar: active child slug. */
@@ -23,6 +24,7 @@ export function ProductsCatalogPage({
   title,
   listing,
   linkState,
+  priceBounds,
   categorySlug,
   childSlug,
   sidebarLinkMode = "products",
@@ -35,6 +37,7 @@ export function ProductsCatalogPage({
       title={title}
       listing={listing}
       linkState={linkState}
+      priceBounds={priceBounds}
       totalPages={totalPages}
       categorySlug={categorySlug}
       childSlug={childSlug}

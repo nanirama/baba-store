@@ -55,7 +55,7 @@ export function ProductsCategoryAccordion({
   linkMode?: "products" | "root";
 }) {
   return (
-    <nav className="px-2 py-4 sm:px-3 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+    <nav className="px-2 py-4 sm:px-3">
       {/* <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
         კატეგორიები
       </p> */}
@@ -90,7 +90,7 @@ function SidebarParent({
   const parentHref =
     linkMode === "root"
       ? parentCategoryHref(parent.slug)
-      : `/${encodeURIComponent(parent.slug)}`;
+      : `/products/${encodeURIComponent(parent.slug)}`;
   const isOpenTarget = parentRowIsOpen(parent, categorySlug, childSlug);
 
   const [open, setOpen] = useState(isOpenTarget);
@@ -169,7 +169,7 @@ function SidebarParent({
             const childHref =
               linkMode === "root"
                 ? childCategoryHref(parent.slug, c.slug)
-                : `/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
+                : `/products/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
             const childActive = categorySlug === parent.slug && childSlug === c.slug;
             return (
               <li key={c.id}>

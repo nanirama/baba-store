@@ -9,21 +9,14 @@ import {
 } from "@/lib/supabase/cms-queries";
 import {
   getProductsListing,
-  parsePageIndex,
-  parsePerPage,
-  parseProductSort,
-  sanitizeSearchQuery,
+  getProductsPriceBoundsForListing,
+  parseListingSearchParams,
 } from "@/lib/supabase/products-listing";
 import type { ProductsListingLinkState } from "@/lib/utils/products-listing-url";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
-
-function firstString(v: string | string[] | undefined): string | undefined {
-  if (v == null) return undefined;
-  return Array.isArray(v) ? v[0] : v;
-}
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -137,18 +130,23 @@ export default async function ProductsSlugPage({ params, searchParams }: PagePro
   }
 
   const sp = await searchParams;
-  const qRaw = firstString(sp.q);
-  const q = sanitizeSearchQuery(qRaw);
-  const sort = parseProductSort(firstString(sp.sort));
-  const per = parsePerPage(firstString(sp.per));
-  const pageReq = parsePageIndex(firstString(sp.page));
+  const { q, sort, per, page, minPrice, maxPrice } = parseListingSearchParams(sp);
+
+  let priceBounds = { min: 0, max: 0 };
+  try {
+    priceBounds = await getProductsPriceBoundsForListing({ categorySlug: slug, q });
+  } catch {
+    /* ignore */
+  }
 
   const listing = await getProductsListing({
     q,
     categorySlug: slug,
     sort,
-    page: pageReq,
+    page,
     perPage: per,
+    minPrice,
+    maxPrice,
   });
 
   const category = await getCategoryBySlug(slug);
@@ -160,6 +158,8 @@ export default async function ProductsSlugPage({ params, searchParams }: PagePro
     sort,
     per: String(listing.perPage),
     page: listing.page,
+    minPrice,
+    maxPrice,
   };
 
   const totalPages = Math.max(1, Math.ceil(listing.total / listing.perPage));
@@ -209,6 +209,7 @@ export default async function ProductsSlugPage({ params, searchParams }: PagePro
         title={title}
         listing={listing}
         linkState={linkState}
+        priceBounds={priceBounds}
         totalPages={totalPages}
         categorySlug={slug}
       />

@@ -1,6 +1,10 @@
 import { BaseLayout } from "@/components/Common/BaseLayout";
 import { ProductCard } from "@/components/store/product-card";
 import { ProductsCategorySidebar } from "@/components/store/products-category-sidebar";
+import {
+  ProductsListingMainColumn,
+  ProductsListingNavProvider,
+} from "@/components/store/products-listing-nav-context";
 import { ProductsPagination } from "@/components/store/products-pagination";
 import { ProductsToolbar } from "@/components/store/products-toolbar";
 import type { ProductsListingResult } from "@/lib/supabase/products-listing";
@@ -10,6 +14,7 @@ type ProductsCatalogLayoutProps = {
   title: string;
   listing: ProductsListingResult;
   linkState: ProductsListingLinkState;
+  priceBounds: { min: number; max: number };
   totalPages: number;
   /** Sidebar: `/products/{categorySlug}` */
   categorySlug?: string;
@@ -25,6 +30,7 @@ export function ProductsCatalogLayout({
   title,
   listing,
   linkState,
+  priceBounds,
   totalPages,
   categorySlug,
   childSlug,
@@ -35,8 +41,9 @@ export function ProductsCatalogLayout({
     Boolean(linkState.q) ||
     Boolean(linkState.category) ||
     Boolean(linkState.segmentBase) ||
-    Boolean(linkState.segmentChild);
-    
+    Boolean(linkState.segmentChild) ||
+    linkState.minPrice != null ||
+    linkState.maxPrice != null;
 
   return (
     <BaseLayout>
@@ -50,38 +57,42 @@ export function ProductsCatalogLayout({
           </div>
         </header>
 
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-          <ProductsCategorySidebar
-            categorySlug={categorySlug}
-            childSlug={childSlug}
-            linkMode={sidebarLinkMode}
-          />
-          <div className="min-w-0 flex-1">
-            {description ? (
-              <p className="mb-6 max-w-3xl text-lg text-gray-600">{description}</p>
-            ) : null}
-            <ProductsToolbar state={linkState} />
-            {listing.total === 0 ? (
-              <p className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center text-gray-600">
-                {scopedListing ? "პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის დამატებული."}
-              </p>
-            ) : (
-             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                {listing.products.map((p) => (
-                  <li className="w-full" key={p.id}>
-                    <ProductCard product={p} />
-                  </li>
-                ))}
-              </ul>
-            )}
-            <ProductsPagination
-              state={linkState}
-              total={listing.total}
-              perPage={listing.perPage}
-              totalPages={totalPages}
+        <ProductsListingNavProvider>
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+            <ProductsCategorySidebar
+              categorySlug={categorySlug}
+              childSlug={childSlug}
+              linkMode={sidebarLinkMode}
+              linkState={linkState}
+              priceBounds={priceBounds}
             />
+            <ProductsListingMainColumn>
+              {description ? (
+                <p className="mb-6 max-w-3xl text-lg text-gray-600">{description}</p>
+              ) : null}
+              <ProductsToolbar state={linkState} />
+              {listing.total === 0 ? (
+                <p className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center text-gray-600">
+                  {scopedListing ? "პროდუქტები ვერ მოიძებნა." : "პროდუქტები ჯერ არ არის დამატებული."}
+                </p>
+              ) : (
+                <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 justify-items-start">
+                  {listing.products.map((p) => (
+                    <li className="w-full" key={p.id}>
+                      <ProductCard product={p} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <ProductsPagination
+                state={linkState}
+                total={listing.total}
+                perPage={listing.perPage}
+                totalPages={totalPages}
+              />
+            </ProductsListingMainColumn>
           </div>
-        </div>
+        </ProductsListingNavProvider>
       </div>
     </BaseLayout>
   );

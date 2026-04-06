@@ -28,8 +28,8 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
 
         <section className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 my-4">
           <div className="p-0">
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="min-w-0">
+            <section className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="md:col-span-7 w-full">
                 <ProductImages
                   key={product.id}
                   productName={product.name}
@@ -39,7 +39,7 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
                   image3={product.image3}
                 />
               </div>
-              <div className="p-4">
+              <div className="md:col-span-5 w-full p-4">
                 <div className="space-y-5 flex flex-col">
                   {(product.model || product.sku) ? (
                     <ul className="list-disc mb-4 space-y-1.5 pl-5 text-sm leading-relaxed text-neutral-800 marker:text-neutral-800">

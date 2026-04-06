@@ -15,7 +15,7 @@ export default async function RootPage() {
   const discountProducts = products.filter((p) => parseTriStateBoolean(p.discounts));
   return (
     <BaseLayout>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 flex flex-col items-center justify-center">
+      <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <button className="group  bg-[#F15A24] hover:bg-[#d94e1f] text-white text-sm font-normal font-heading uppercase px-6 py-3 rounded-sm transition-all duration-300">
           <Link href="/products" className="inline-flex items-center gap-2"> ყველა პროექტი
             <svg

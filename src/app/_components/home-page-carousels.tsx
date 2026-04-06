@@ -1,18 +1,24 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ProductsSlider } from "@/components/store/home-products-slider";
 import type { ProductRecord } from "@/types/cms";
 
-const HomeDeferredSliders = dynamic(() => import("./home-deferred-sliders"), {
-  loading: () => (
-    <>
-      <ProductCarouselSkeleton statusLabel="იტვირთება ბესტსელერების ბლოკი" />
-      <ProductCarouselSkeleton statusLabel="იტვირთება ფასდაკლებების ბლოკი" />
-    </>
-  ),
-  ssr: false,
-});
+const HomeProductCarouselsInner = dynamic(
+  () =>
+    import("./home-product-carousels-inner").then((m) => ({
+      default: m.HomeProductCarouselsInner,
+    })),
+  {
+    ssr: true,
+    loading: () => (
+      <>
+        <ProductCarouselSkeleton statusLabel="იტვირთება აქციების ბლოკი" />
+        <ProductCarouselSkeleton statusLabel="იტვირთება ბესტსელერების ბლოკი" />
+        <ProductCarouselSkeleton statusLabel="იტვირთება ფასდაკლებების ბლოკი" />
+      </>
+    ),
+  },
+);
 
 /** Reserved vertical space to match `ProductsSlider` heading + track (CLS). */
 function ProductCarouselSkeleton({ statusLabel }: { statusLabel: string }) {
@@ -42,17 +48,10 @@ export function HomePageCarousels({
   discountProducts: ProductRecord[];
 }) {
   return (
-    <>
-      <ProductsSlider
-        heading="აქციები  "
-        ariaLabel="Promotions products"
-        products={promotionProducts}
-        prioritySlideCount={2}
-      />
-      <HomeDeferredSliders
-        bestSellerProducts={bestSellerProducts}
-        discountProducts={discountProducts}
-      />
-    </>
+    <HomeProductCarouselsInner
+      promotionProducts={promotionProducts}
+      bestSellerProducts={bestSellerProducts}
+      discountProducts={discountProducts}
+    />
   );
 }

@@ -1,7 +1,7 @@
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 
-import { CatalogMegaMenu } from "@/components/Common/catalog-mega-menu";
 import { HeaderSearchForm } from "@/components/Common/HeaderSearchForm";
 import {
   headerMobileScrollLinks,
@@ -12,6 +12,23 @@ import {
 import { NEUTRAL_TILE_BLUR_DATA_URL } from "@/lib/images/product-image-url";
 import { getCatalogMenuTree } from "@/lib/supabase/categories";
 import type { CatalogCategoryParent } from "@/types/catalog-menu";
+
+const CatalogMegaMenu = dynamic(
+  () => import("@/components/Common/catalog-mega-menu").then((m) => ({ default: m.CatalogMegaMenu })),
+  {
+    ssr: true,
+    loading: () => (
+      <div
+        className="flex h-10 items-center gap-1.5 rounded-md py-2 text-primary/60"
+        aria-busy="true"
+        aria-label="კატალოგის მენიუ იტვირთება"
+      >
+        <span className="h-5 w-5 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
+        <span className="h-4 w-16 shrink-0 animate-pulse rounded bg-muted sm:w-20" aria-hidden />
+      </div>
+    ),
+  },
+);
 
 const TOP_BAR_CLASS =
   "bg-[#05141f] text-[12px] leading-tight text-white/95 sm:text-[13px]";

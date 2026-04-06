@@ -3,16 +3,24 @@
 import { ProductsSlider } from "@/components/store/home-products-slider";
 import type { ProductRecord } from "@/types/cms";
 
-/** Second + third homepage carousels — loaded in a separate chunk via `next/dynamic`. */
-export default function HomeDeferredSliders({
+/** All homepage product carousels in one module so `react-slick` loads in a single deferred chunk. */
+export function HomeProductCarouselsInner({
+  promotionProducts,
   bestSellerProducts,
   discountProducts,
 }: {
+  promotionProducts: ProductRecord[];
   bestSellerProducts: ProductRecord[];
   discountProducts: ProductRecord[];
 }) {
   return (
     <>
+      <ProductsSlider
+        heading="აქციები  "
+        ariaLabel="Promotions products"
+        products={promotionProducts}
+        prioritySlideCount={2}
+      />
       <ProductsSlider
         heading="ბესტსელერები"
         ariaLabel="Bestsellers products"

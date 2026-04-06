@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getProducts } from "@/lib/supabase/cms-queries";
 import { siteOrigin } from "@/lib/seo/site-origin";
 import type { ProductRecord } from "@/types/cms";
-import { parseTriStateBoolean } from "@/utils/cms-schemas";
+import { parseTriStateBoolean } from "@/utils/tri-state-boolean";
 
 /** Supabase server client uses `cache: "no-store"` fetches — static prerender would conflict at build time. */
 export const dynamic = "force-dynamic";

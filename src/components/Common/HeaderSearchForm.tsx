@@ -145,10 +145,12 @@ export function HeaderSearchForm() {
           if (apiQ.length >= 2 && results.length > 0) setOpen(true);
         }}
         onKeyDown={handleKeyDown}
+        role="combobox"
         aria-autocomplete="list"
-        aria-controls={listboxId}
+        aria-haspopup="listbox"
+        aria-controls={open ? listboxId : undefined}
         aria-expanded={open}
-        aria-activedescendant={activeDescendantId}
+        aria-activedescendant={open ? activeDescendantId : undefined}
         className="h-11 w-full min-w-0 px-4 rounded-lg border border-foreground/90 bg-white pr-12 text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       />
 

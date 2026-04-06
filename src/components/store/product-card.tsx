@@ -5,6 +5,7 @@ import {
   buildProductCardImageSrc,
   productCardBlurDataUrl,
   PRODUCT_CARD_IMAGE_MAX_PX,
+  PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL,
   PRODUCT_CARD_SIZES_CAROUSEL,
   PRODUCT_CARD_SIZES_GRID,
 } from "@/lib/images/product-card-image";
@@ -32,7 +33,8 @@ export function ProductCard({
 }: ProductCardProps) {
   const rawSrc = pickImageUrl(product);
   const href = `/products/${encodeURIComponent(product.slug)}`;
-  const optimizedSrc = rawSrc ? buildProductCardImageSrc(rawSrc, PRODUCT_CARD_IMAGE_MAX_PX) : null;
+  const urlMaxPx = layout === "carousel" ? PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL : PRODUCT_CARD_IMAGE_MAX_PX;
+  const optimizedSrc = rawSrc ? buildProductCardImageSrc(rawSrc, urlMaxPx) : null;
   const blurDataURL = productCardBlurDataUrl(product.main_image_blur_data_url);
   const sizes = sizesOverride ?? (layout === "carousel" ? PRODUCT_CARD_SIZES_CAROUSEL : PRODUCT_CARD_SIZES_GRID);
   const title = product.name.trim() || "პროდუქტი";
@@ -50,6 +52,7 @@ export function ProductCard({
               alt={title}
               fill
               sizes={sizes}
+              quality={priority ? 78 : 68}
               priority={priority}
               fetchPriority={priority ? "high" : "low"}
               placeholder={layout === "carousel" && !priority ? "empty" : "blur"}

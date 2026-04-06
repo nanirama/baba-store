@@ -45,8 +45,8 @@ export function BulkUploadForm() {
         <span className="font-mono text-xs">https://baba.ge/image/cache/</span> then upload to storage.
       </p>
       <div className="space-y-1">
-        <Label htmlFor="file">CSV or XLSX</Label>
-        <Input id="file" name="file" type="file" accept=".csv,.xlsx" required />
+        <Label htmlFor="file">Excel (.xlsx or .xls)</Label>
+        <Input id="file" name="file" type="file" accept=".xlsx,.xls" required />
       </div>
       <Button
         type="submit"

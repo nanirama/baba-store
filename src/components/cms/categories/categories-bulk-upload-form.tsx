@@ -23,7 +23,7 @@ export function CategoriesBulkUploadForm() {
         });
       }}
     >
-      <h3 className="text-base font-semibold text-slate-900">Import Categories (Excel/CSV)</h3>
+      <h3 className="text-base font-semibold text-slate-900">Import Categories (Excel)</h3>
       <p className="text-sm text-slate-500">
         Mapping: Name → name, SEO url 0 → slug, Description → description (converted to TipTap JSON), Category id,
         Parent id, Meta title, Meta description, Meta keywords, Sort order, Status.
@@ -32,7 +32,7 @@ export function CategoriesBulkUploadForm() {
 
       <div className="space-y-1">
         <Label htmlFor="file">File</Label>
-        <Input id="file" name="file" type="file" accept=".xlsx,.xls,.csv" required />
+        <Input id="file" name="file" type="file" accept=".xlsx,.xls" required />
       </div>
 
       <Button

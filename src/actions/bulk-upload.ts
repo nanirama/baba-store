@@ -5,7 +5,7 @@ import "server-only";
 import { refresh, revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/helpers";
-import { parseCsv, parseXlsx, type BulkProductInput } from "@/utils/bulk-parser";
+import { parseXlsx, type BulkProductInput } from "@/utils/bulk-parser";
 
 /** Set to `true` to skip main_image + image1–3 fetch/upload (faster dry-run). */
 const BULK_IMAGE_UPLOADS_DISABLED = false;
@@ -67,10 +67,6 @@ type BulkResult = {
   skippedDuplicateSlug?: number;
   imageFailures?: BulkImageFailure[];
 };
-
-function toPlainText(content: ArrayBuffer): string {
-  return new TextDecoder("utf-8").decode(content);
-}
 
 function isUniqueViolation(err: { code?: string; message?: string } | null): boolean {
   if (!err) return false;
@@ -267,14 +263,17 @@ export async function processBulkUploadAction(formData: FormData): Promise<BulkR
 
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return { success: false, message: "Please upload a CSV or XLSX file.", imported: 0 };
+    return { success: false, message: "Please upload an Excel file (.xlsx or .xls).", imported: 0 };
+  }
+
+  const lower = file.name.toLowerCase();
+  if (!lower.endsWith(".xlsx") && !lower.endsWith(".xls")) {
+    return { success: false, message: "Only Excel files (.xlsx, .xls) are supported.", imported: 0 };
   }
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const rows = file.name.endsWith(".xlsx")
-      ? parseXlsx(arrayBuffer)
-      : parseCsv(toPlainText(arrayBuffer));
+    const rows = parseXlsx(arrayBuffer);
 
     if (rows.length === 0) {
       return { success: false, message: "No valid rows found in upload file.", imported: 0 };

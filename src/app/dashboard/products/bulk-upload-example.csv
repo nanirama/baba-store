@@ -1,2 +1,0 @@
-name,model,slug,description,price,quantity,sku,upc,mpn,status,tags,image_urls,manufacturer,Cat1,Cat2,Cat3
-Premium Blender,BL-900,premium-blender,"<h2>Powerful blender</h2><p>Great for smoothies.</p><ul><li>1200W</li><li>6 blades</li></ul>",299.99,12,BLN-900,123456789012,MPN-BL-900,active,"kitchen,blender,home","https://example.com/img/blender-main.jpg,https://example.com/img/blender-2.jpg",Baba Home Appliances,Kitchen,Small Appliances,Home

@@ -23,7 +23,7 @@ export default async function BulkUploadPage() {
     <div className="space-y-6">
       <DashboardPageHeader
         title="Bulk Upload"
-        description="Import products from CSV or Excel (Cat.1 / Cat.2, HTML description, main and gallery images)."
+        description="Import products from Excel (.xlsx / .xls): Cat.1 / Cat.2, HTML description, main and gallery images."
         actions={
           <Link href="/dashboard/products">
             <Button variant="outline" className="border-slate-200 font-medium shadow-sm">

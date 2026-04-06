@@ -18,7 +18,7 @@ export default async function CategoriesBulkUploadPage() {
     <div className="space-y-6">
       <DashboardPageHeader
         title="Categories Bulk Upload"
-        description="Import categories from Excel/CSV based on your Supabase categories schema."
+        description="Import categories from Excel (.xlsx / .xls) based on your Supabase categories schema."
         actions={
           <Link href="/dashboard/categories">
             <Button variant="outline" className="border-slate-200 font-medium shadow-sm">

@@ -2,7 +2,6 @@
 
 import "server-only";
 
-import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { revalidateTag } from "next/cache";
 
@@ -30,10 +29,6 @@ type CategoryUploadRow = {
   sort_order: number;
   status: string;
 };
-
-function toPlainText(content: ArrayBuffer): string {
-  return new TextDecoder("utf-8").decode(content);
-}
 
 function headerAliases(key: string): string[] {
   const t = key.replace(/^\uFEFF/, "").trim();
@@ -97,18 +92,6 @@ function normalizeRow(row: Record<string, unknown>): CategoryUploadRow {
   };
 }
 
-function parseCsv(content: string): CategoryUploadRow[] {
-  const parsed = Papa.parse<Record<string, unknown>>(content, {
-    header: true,
-    skipEmptyLines: true,
-  });
-  if (parsed.errors.length > 0) throw new Error(parsed.errors[0].message);
-
-  return parsed.data
-    .map(normalizeRow)
-    .filter((r) => r.name.length > 0 && r.slug.length > 0);
-}
-
 function parseXlsx(buffer: ArrayBuffer): CategoryUploadRow[] {
   const workbook = XLSX.read(buffer, { type: "array" });
   const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -140,15 +123,22 @@ export async function processCategoriesBulkUploadAction(formData: FormData): Pro
 
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return { success: false, message: "Please upload an Excel or CSV file.", imported: 0, failed: 0 };
+    return { success: false, message: "Please upload an Excel file (.xlsx or .xls).", imported: 0, failed: 0 };
+  }
+
+  const lower = file.name.toLowerCase();
+  if (!lower.endsWith(".xlsx") && !lower.endsWith(".xls")) {
+    return {
+      success: false,
+      message: "Only Excel files (.xlsx, .xls) are supported.",
+      imported: 0,
+      failed: 0,
+    };
   }
 
   try {
     const buffer = await file.arrayBuffer();
-    const rows =
-      file.name.toLowerCase().endsWith(".xlsx") || file.name.toLowerCase().endsWith(".xls")
-        ? parseXlsx(buffer)
-        : parseCsv(toPlainText(buffer));
+    const rows = parseXlsx(buffer);
 
     if (rows.length === 0) {
       return { success: false, message: "No valid rows found.", imported: 0, failed: 0 };

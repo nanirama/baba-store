@@ -1,4 +1,3 @@
-import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { slugify } from "./slug";
 import { htmlToTipTapJson } from "./html-to-tiptap";
@@ -90,7 +89,7 @@ function headerAliases(key: string): string[] {
   return [...new Set([lower, underscored, spaced, compact])];
 }
 
-/** Case-insensitive lookup — Excel/CSV exports use "Name", "SEO url 0", "Main image", etc. */
+/** Case-insensitive lookup — Excel exports use "Name", "SEO url 0", "Main image", etc. */
 function pick(row: Record<string, unknown>, ...variants: string[]): unknown {
   const aliasToOriginal = new Map<string, string>();
   for (const key of Object.keys(row)) {
@@ -330,19 +329,6 @@ function normalizeRow(row: Record<string, unknown>): BulkProductInput {
     meta_description: optionalStr(pick(row, "meta description", "meta_description")),
     meta_keywords: optionalStr(pick(row, "meta keywords", "meta_keywords")),
   };
-}
-
-export function parseCsv(content: string): BulkProductInput[] {
-  const parsed = Papa.parse<Record<string, unknown>>(content, {
-    header: true,
-    skipEmptyLines: true,
-  });
-
-  if (parsed.errors.length > 0) {
-    throw new Error(parsed.errors[0].message);
-  }
-
-  return parsed.data.map(normalizeRow).filter((row) => row.name.length > 0);
 }
 
 export function parseXlsx(buffer: ArrayBuffer): BulkProductInput[] {

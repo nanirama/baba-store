@@ -1,5 +1,16 @@
+import bundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
 import type { SizeLimit } from "next";
+
+/**
+ * Set `ANALYZE=true` and run `npm run analyze` (uses Webpack; Turbopack builds skip the plugin).
+ * Reports are written under `.next/analyze/` — open `client.html` for the browser bundle
+ * (`nodejs.html` / `edge.html` for server/edge).
+ */
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+  openAnalyzer: true,
+});
 
 /**
  * Server Actions origin allowlist. Vercel preview/production use `VERCEL_URL`; add your
@@ -155,4 +166,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

@@ -24,4 +24,4 @@ Allow service-role uploads to `product-images` bucket.
 
 ## 5) Bulk upload format
 
-Use `src/app/dashboard/products/bulk-upload-example.csv` as template.
+Use an Excel workbook (`.xlsx` or `.xls`); the first sheet is read. Column headers match the previous CSV template (Name, SEO url 0, description, etc.).

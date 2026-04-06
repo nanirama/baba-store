@@ -132,7 +132,3 @@ export const categorySchema = z.object({
     z.string().url().nullable().optional()
   ),
 });
-
-export const bulkUploadSchema = z.object({
-  mode: z.enum(["csv", "xlsx"]),
-});

@@ -101,9 +101,9 @@ export function ProductsSlider({
             },
           ]}
         >
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div key={product.id} className="h-full px-2">
-              <ProductCard product={product} />
+              <ProductCard product={product} layout="carousel" priority={index < 2} />
             </div>
           ))}
         </Slider>

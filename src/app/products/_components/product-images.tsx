@@ -3,6 +3,13 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
+import {
+  buildProductCardImageSrc,
+  PRODUCT_DETAIL_MAIN_MAX_PX,
+  PRODUCT_DETAIL_MAIN_SIZES,
+  PRODUCT_DETAIL_THUMB_MAX_PX,
+  productCardBlurDataUrl,
+} from "@/lib/images/product-card-image";
 import { cn } from "@/lib/utils";
 
 function uniqueImageUrls(
@@ -26,6 +33,13 @@ export type ProductImagesProps = {
   image1: string | null;
   image2: string | null;
   image3: string | null;
+  /** Optional CMS LQIP (`data:...`) for hero placeholder blur (e.g. Sanity). */
+  mainImageBlurDataUrl?: string | null;
+  /**
+   * LCP: set false if the gallery is not above the fold.
+   * @default true
+   */
+  priorityHero?: boolean;
 };
 
 export function ProductImages({
@@ -34,17 +48,30 @@ export function ProductImages({
   image1,
   image2,
   image3,
+  mainImageBlurDataUrl,
+  priorityHero = true,
 }: ProductImagesProps) {
   const urls = useMemo(
     () => uniqueImageUrls(mainImage, image1, image2, image3),
     [mainImage, image1, image2, image3]
   );
 
+  const { optimizedMain, optimizedThumb } = useMemo(() => {
+    const main = urls.map((u) => buildProductCardImageSrc(u, PRODUCT_DETAIL_MAIN_MAX_PX));
+    const thumb = urls.map((u) => buildProductCardImageSrc(u, PRODUCT_DETAIL_THUMB_MAX_PX));
+    return { optimizedMain: main, optimizedThumb: thumb };
+  }, [urls]);
+
   const [active, setActive] = useState(0);
 
   const safeIndex = urls.length > 0 ? Math.min(active, urls.length - 1) : 0;
-  const currentSrc = urls[safeIndex] ?? null;
+  const currentSrc = optimizedMain[safeIndex] ?? null;
   const showThumbs = urls.length > 1;
+  const title = productName.trim() || "პროდუქტი";
+  const heroBlurDataUrl = productCardBlurDataUrl(mainImageBlurDataUrl);
+  const heroPriority = priorityHero && safeIndex === 0;
+  const heroAlt =
+    urls.length > 1 ? `${title} — სურათი ${safeIndex + 1} ${urls.length}-დან` : title;
 
   if (urls.length === 0) {
     return (
@@ -58,17 +85,24 @@ export function ProductImages({
     <div className="flex w-full max-w-full flex-col gap-3 sm:gap-4">
       <div
         className={cn(
-          "relative mx-auto aspect-square w-full max-w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm",
-          "lg:mx-0"
+          "relative mx-auto aspect-square w-full max-w-full shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm",
+          "lg:mx-0",
+          "[&_img]:!object-contain"
         )}
       >
         <Image
+          key={currentSrc}
           src={currentSrc!}
-          alt={productName}
+          alt={heroAlt}
           fill
-          className="max-w-full max-h-full p-3 sm:p-4"
-          sizes="(min-width: 1280px) 480px, (min-width: 1024px) 28vw, min(448px, 100vw)"
-          priority
+          sizes={PRODUCT_DETAIL_MAIN_SIZES}
+          priority={heroPriority}
+          fetchPriority={heroPriority ? "high" : "low"}
+          placeholder={safeIndex === 0 ? "blur" : "empty"}
+          blurDataURL={safeIndex === 0 ? heroBlurDataUrl : undefined}
+          decoding="async"
+          className="box-border object-contain object-center p-3 sm:p-4"
+          style={{ objectFit: "contain" }}
         />
       </div>
 
@@ -77,11 +111,13 @@ export function ProductImages({
           <ul className="flex gap-2 overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-2.5 [&::-webkit-scrollbar]:hidden">
             {urls.map((src, i) => {
               const selected = i === safeIndex;
+              const thumbSrc = optimizedThumb[i] ?? src;
               return (
                 <li key={`${src}-${i}`} className="shrink-0 snap-start">
                   <button
                     type="button"
                     aria-current={selected ? "true" : undefined}
+                    aria-label={`სურათი ${i + 1} ${urls.length}-დან`}
                     onClick={() => setActive(i)}
                     className={cn(
                       "relative h-16 w-16 overflow-hidden rounded-md border bg-white transition-[box-shadow,border-color] sm:h-[4.5rem] sm:w-[4.5rem]",
@@ -91,15 +127,15 @@ export function ProductImages({
                     )}
                   >
                     <Image
-                      src={src}
+                      src={thumbSrc}
                       alt=""
                       fill
-                      className="object-contain p-1.5"
-                      sizes="80px"
+                      loading="lazy"
+                      decoding="async"
+                      className="box-border object-contain object-center p-1.5"
+                      style={{ objectFit: "contain" }}
+                      sizes="(max-width: 640px) 64px, 72px"
                     />
-                    <span className="sr-only">
-                      სურათი {i + 1} {urls.length}-დან
-                    </span>
                   </button>
                 </li>
               );

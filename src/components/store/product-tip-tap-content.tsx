@@ -55,7 +55,7 @@ function renderNodes(nodes: TipTapNode[] = []): ReactNode[] {
 
     if (node.type === "paragraph") {
       return (
-        <p key={key} className="text-[15px] leading-7 text-pretty text-neutral-800">
+        <p key={key} className="text-[15px] leading-snug text-pretty text-neutral-800">
           {renderNodes(node.content)}
         </p>
       );
@@ -75,7 +75,7 @@ function renderNodes(nodes: TipTapNode[] = []): ReactNode[] {
       return (
         <ul
           key={key}
-          className="list-disc space-y-1.5 pl-5 text-[15px] leading-7 text-neutral-800 marker:text-neutral-900"
+          className="list-disc space-y-0.5 pl-5 text-[15px] leading-snug text-neutral-800 marker:text-neutral-900"
         >
           {renderNodes(node.content)}
         </ul>
@@ -84,7 +84,7 @@ function renderNodes(nodes: TipTapNode[] = []): ReactNode[] {
 
     if (node.type === "orderedList") {
       return (
-        <ol key={key} className="list-decimal space-y-1.5 pl-5 text-[15px] leading-7 text-neutral-800">
+        <ol key={key} className="list-decimal space-y-0.5 pl-5 text-[15px] leading-snug text-neutral-800">
           {renderNodes(node.content)}
         </ol>
       );
@@ -92,7 +92,7 @@ function renderNodes(nodes: TipTapNode[] = []): ReactNode[] {
 
     if (node.type === "listItem") {
       return (
-        <li key={key} className="break-words [&_p]:mb-1 [&_p:last-child]:mb-0">
+        <li key={key} className="break-words [&_p]:mb-0.5 [&_p:last-child]:mb-0 [&_p]:leading-snug">
           {renderNodes(node.content)}
         </li>
       );
@@ -124,7 +124,7 @@ export function ProductTipTapContent({ description }: { description: ProductDesc
   if (nodes.length === 0) return null;
 
   return (
-    <div className="product-prose w-full min-w-0 max-w-none space-y-3 break-words [&_a]:break-words">
+    <div className="product-prose w-full min-w-0 max-w-none space-y-2 break-words [&_a]:break-words">
       {renderNodes(nodes)}
     </div>
   );

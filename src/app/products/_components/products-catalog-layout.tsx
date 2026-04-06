@@ -77,9 +77,9 @@ export function ProductsCatalogLayout({
                 </p>
               ) : (
                 <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 justify-items-start">
-                  {listing.products.map((p) => (
+                  {listing.products.map((p, index) => (
                     <li className="w-full" key={p.id}>
-                      <ProductCard product={p} />
+                      <ProductCard product={p} priority={index < 6} layout="grid" />
                     </li>
                   ))}
                 </ul>

@@ -204,7 +204,7 @@ export default async function ProductsSlugPage({ params, searchParams }: PagePro
 
         return <Seo schema={{ "@context": "https://schema.org", "@graph": [breadcrumbSchema, webPageSchema] }} />;
       })()}
-
+    
       <ProductsCatalogLayout
         title={title}
         listing={listing}

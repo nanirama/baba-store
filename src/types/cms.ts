@@ -31,6 +31,8 @@ export type ProductRecord = {
   price: number;
   quantity: number | null;
   main_image: string | null;
+  /** Sanity LQIP / tiny data URL for `next/image` blur placeholder when available. */
+  main_image_blur_data_url?: string | null;
   image1: string | null;
   image2: string | null;
   image3: string | null;

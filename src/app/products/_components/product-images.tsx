@@ -68,6 +68,7 @@ export function ProductImages({
   const currentSrc = optimizedMain[safeIndex] ?? null;
   const showThumbs = urls.length > 1;
   const title = productName.trim() || "პროდუქტი";
+  const mainUrlTrim = (mainImage ?? "").trim();
   const heroBlurDataUrl = productCardBlurDataUrl(mainImageBlurDataUrl);
   const heroPriority = priorityHero && safeIndex === 0;
   const heroAlt =
@@ -112,6 +113,9 @@ export function ProductImages({
             {urls.map((src, i) => {
               const selected = i === safeIndex;
               const thumbSrc = optimizedThumb[i] ?? src;
+              const thumbBlur = productCardBlurDataUrl(
+                mainUrlTrim.length > 0 && src === mainUrlTrim ? mainImageBlurDataUrl : undefined
+              );
               return (
                 <li key={`${src}-${i}`} className="shrink-0 snap-start">
                   <button
@@ -131,6 +135,9 @@ export function ProductImages({
                       alt=""
                       fill
                       loading="lazy"
+                      fetchPriority="low"
+                      placeholder="blur"
+                      blurDataURL={thumbBlur}
                       decoding="async"
                       className="box-border object-contain object-center p-1.5"
                       style={{ objectFit: "contain" }}

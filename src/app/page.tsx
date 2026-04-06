@@ -1,29 +1,69 @@
 import Link from "next/link";
-import { ProductsSlider } from "@/components/store/home-products-slider";
-import { getProducts } from "@/lib/supabase/cms-queries";
+
+import { HomePageCarousels } from "@/app/_components/home-page-carousels";
 import { BaseLayout } from "@/components/Common/BaseLayout";
 import { Button } from "@/components/ui/button";
+import { getProducts } from "@/lib/supabase/cms-queries";
+import { siteOrigin } from "@/lib/seo/site-origin";
+import type { ProductRecord } from "@/types/cms";
 import { parseTriStateBoolean } from "@/utils/cms-schemas";
 
 /** Supabase server client uses `cache: "no-store"` fetches — static prerender would conflict at build time. */
 export const dynamic = "force-dynamic";
+
+const LIST_SCHEMA_LIMIT = 48;
+
+function itemListSchemaBlock(name: string, products: ProductRecord[], origin: string) {
+  const list = products.slice(0, LIST_SCHEMA_LIMIT);
+  return {
+    "@type": "ItemList" as const,
+    name,
+    itemListElement: list.map((p, i) => ({
+      "@type": "ListItem" as const,
+      position: i + 1,
+      name: p.name,
+      url: `${origin}/products/${encodeURIComponent(p.slug)}`,
+    })),
+  };
+}
 
 export default async function RootPage() {
   const products = await getProducts();
   const promotionProducts = products.filter((p) => parseTriStateBoolean(p.promotions));
   const bestSellerProducts = products.filter((p) => parseTriStateBoolean(p.bestsellers));
   const discountProducts = products.filter((p) => parseTriStateBoolean(p.discounts));
+
+  const origin = siteOrigin();
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      itemListSchemaBlock("Promotions", promotionProducts, origin),
+      itemListSchemaBlock("Bestsellers", bestSellerProducts, origin),
+      itemListSchemaBlock("Discounts", discountProducts, origin),
+    ],
+  };
+
   return (
     <BaseLayout>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="mx-auto flex w-full min-w-0 max-w-7xl flex-col items-center justify-center px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <button className="group  bg-[#F15A24] hover:bg-[#d94e1f] text-white text-sm font-normal font-heading uppercase px-6 py-3 rounded-sm transition-all duration-300">
-          <Link href="/products" className="inline-flex items-center gap-2"> ყველა პროექტი
+        <Button
+          asChild
+          className="group rounded-sm bg-[#F15A24] px-6 py-3 font-heading text-sm font-normal uppercase text-white transition-all duration-300 hover:bg-[#d94e1f]"
+        >
+          <Link href="/products" className="inline-flex items-center gap-2">
+            ყველა პროექტი
             <svg
-              className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+              className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               viewBox="0 0 24 24"
+              aria-hidden
             >
               <path
                 strokeLinecap="round"
@@ -32,35 +72,13 @@ export default async function RootPage() {
               />
             </svg>
           </Link>
-        </button>
-        <ProductsSlider
-          heading="აქციები  "
-          ariaLabel="Promotions products"
-          products={promotionProducts}
-        />
-        <ProductsSlider
-          heading="ბესტსელერები"
-          ariaLabel="Bestsellers products"
-          products={bestSellerProducts}
-        />
-        <ProductsSlider
-          heading="ფასდაკლებები"
-          ariaLabel="Discounts products"
-          products={discountProducts}
+        </Button>
+        <HomePageCarousels
+          promotionProducts={promotionProducts}
+          bestSellerProducts={bestSellerProducts}
+          discountProducts={discountProducts}
         />
       </div>
-
-      {/* <div className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center">
-        <h1 className="mb-4 max-w-2xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-          ონლაინ მაღაზია საუკეთესო ფასად
-        </h1>
-        <p className="mb-10 max-w-xl text-lg text-muted-foreground">
-          შეიძინეთ ტექნიკა, ავეჯი და სხვა პროდუქტები ონლაინ — სწრაფი მიწოდება საქართველოში.
-        </p>
-        <Button asChild size="lg" className="rounded-full px-8">
-          <Link href="/auth/login">შესვლა</Link>
-        </Button>
-      </div> */}
     </BaseLayout>
   );
 }

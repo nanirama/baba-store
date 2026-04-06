@@ -9,6 +9,7 @@ import {
   headerTopLeftLinks,
   headerTopRightLinks,
 } from "@/components/Common/header-links";
+import { NEUTRAL_TILE_BLUR_DATA_URL } from "@/lib/images/product-image-url";
 import { getCatalogMenuTree } from "@/lib/supabase/categories";
 import type { CatalogCategoryParent } from "@/types/catalog-menu";
 
@@ -56,9 +57,27 @@ function HeaderTopBar() {
               </ul>
             </nav>
           </div>
-          <Link href="/contact" className="flex justify-end">
-            <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21.0039 12C21.0039 16.9706 16.9745 21 12.0039 21C9.9675 21 3.00463 21 3.00463 21C3.00463 21 4.56382 17.2561 3.93982 16.0008C3.34076 14.7956 3.00391 13.4372 3.00391 12C3.00391 7.02944 7.03334 3 12.0039 3C16.9745 3 21.0039 7.02944 21.0039 12Z" stroke="#F15A24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <Link
+            href="/contact"
+            className="flex justify-end focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            aria-label="კონტაქტი"
+            title="კონტაქტი"
+          >
+            <svg
+              width={24}
+              height={24}
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <path
+                d="M21.0039 12C21.0039 16.9706 16.9745 21 12.0039 21C9.9675 21 3.00463 21 3.00463 21C3.00463 21 4.56382 17.2561 3.93982 16.0008C3.34076 14.7956 3.00391 13.4372 3.00391 12C3.00391 7.02944 7.03334 3 12.0039 3C16.9745 3 21.0039 7.02944 21.0039 12Z"
+                stroke="#F15A24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </Link>
         </div>
@@ -70,12 +89,16 @@ function HeaderTopBar() {
         aria-label="სწრაფი ბმულები"
       >
         <nav
-          className="mx-auto flex max-w-[1440px] snap-x snap-mandatory gap-x-4 overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden"
+          className="mx-auto flex max-w-[1440px] snap-x snap-mandatory overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden"
           aria-label="სწრაფი ნავიგაცია"
         >
-          {headerMobileScrollLinks.map((item) => (
-            <TopBarLink key={`${item.href}-${item.label}`} href={item.href} label={item.label} />
-          ))}
+          <ul className="flex min-w-0 gap-x-4">
+            {headerMobileScrollLinks.map((item) => (
+              <li key={`${item.href}-${item.label}`} className="shrink-0 snap-start">
+                <TopBarLink href={item.href} label={item.label} />
+              </li>
+            ))}
+          </ul>
         </nav>
       </div>
     </>
@@ -94,25 +117,41 @@ export async function Header() {
   const catalogParents = await loadCatalogParents();
 
   return (
-    <header className="sticky top-0 z-50 overflow-visible">
+    <header id="site-header" className="sticky top-0 z-50 min-w-0 overflow-visible">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+      >
+        კონტენტზე გადასვლა
+      </a>
       <HeaderTopBar />
 
       <div className="overflow-visible border-b border-border/80 bg-white shadow-sm">
         <div className="mx-auto max-w-[1440px] overflow-visible px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-3 overflow-visible lg:flex-row lg:items-center lg:gap-6">
+          <div className="flex min-w-0 flex-col gap-3 overflow-visible lg:flex-row lg:items-center lg:gap-6">
             <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-4 lg:justify-start lg:gap-5">
-              <Link href="/" className="relative inline-flex shrink-0">
+              <Link
+                href="/"
+                className="relative inline-flex shrink-0 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                aria-label="Baba.ge — მთავარი"
+              >
                 <Image
                   src="/images/logo.webp"
-                  alt="Baba.ge"
+                  alt=""
                   width={150}
                   height={66}
                   priority
-                  sizes="(max-width: 640px) 126px, (max-width: 1024px) 126px"
-                  className="h-[56px] w-auto "
+                  fetchPriority="high"
+                  placeholder="blur"
+                  blurDataURL={NEUTRAL_TILE_BLUR_DATA_URL}
+                  sizes="(max-width: 640px) 126px, (max-width: 1024px) 126px, 150px"
+                  className="h-[56px] w-auto"
                 />
               </Link>
-              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              <nav
+                className="flex min-w-0 items-center gap-2 sm:gap-3"
+                aria-label="კატალოგი და ანგარიში"
+              >
                 <CatalogMegaMenu parents={catalogParents} />
                 <Link
                   href="/auth/login"
@@ -120,10 +159,10 @@ export async function Header() {
                 >
                   შესვლა
                 </Link>
-              </div>
+              </nav>
             </div>
 
-            <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row justify-end sm:items-center lg:gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:gap-4">
               <HeaderSearchForm />
               {/* <Link
                 href="/auth/login"

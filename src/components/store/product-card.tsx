@@ -43,7 +43,7 @@ export function ProductCard({
         href={href}
         className="flex min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 pb-4"
       >
-        <div className="relative aspect-square w-full bg-gray-50">
+        <div className="relative aspect-square w-full shrink-0 bg-gray-50 [&_img]:!object-contain">
           {optimizedSrc ? (
             <Image
               src={optimizedSrc}
@@ -51,10 +51,12 @@ export function ProductCard({
               fill
               sizes={sizes}
               priority={priority}
-              placeholder="blur"
-              blurDataURL={blurDataURL}
+              fetchPriority={priority ? "high" : "low"}
+              placeholder={layout === "carousel" && !priority ? "empty" : "blur"}
+              blurDataURL={layout === "carousel" && !priority ? undefined : blurDataURL}
               decoding="async"
-              className="object-contain p-4"
+              className="box-border object-contain object-center p-4"
+              style={{ objectFit: "contain" }}
             />
           ) : (
             <div

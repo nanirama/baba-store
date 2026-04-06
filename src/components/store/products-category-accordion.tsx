@@ -1,32 +1,62 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Minus, Package, Plus } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { memo, useEffect, useId, useMemo, useState } from "react";
 
+import {
+  buildProductCardImageSrc,
+  CATEGORY_ICON_IMAGE_SIZES,
+  CATEGORY_ICON_MAX_PX,
+  productCardBlurDataUrl,
+} from "@/lib/images/product-image-url";
+import { childCategoryHref, parentCategoryHref } from "@/lib/utils/category-href";
 import { cn } from "@/lib/utils";
 import { isSafeImageUrlForAttr } from "@/lib/utils/safe-image-url";
 import type { CatalogCategoryParent } from "@/types/catalog-menu";
-import { childCategoryHref, parentCategoryHref } from "@/lib/utils/category-href";
 
-function CategoryGlyph({ iconUrl }: { iconUrl: string | null }) {
+/** First rows: eager decode helps LCP when the sidebar is above the fold (e.g. desktop). */
+const GLYPH_PRIORITY_PARENT_COUNT = 6;
+
+const CategoryIconBlur = productCardBlurDataUrl(undefined);
+
+const CategoryGlyph = memo(function CategoryGlyph({
+  iconUrl,
+  priority = false,
+}: {
+  iconUrl: string | null;
+  /** Hint LCP for the first few sidebar rows only. */
+  priority?: boolean;
+}) {
   const t = iconUrl?.trim() ?? "";
-  if (t && isSafeImageUrlForAttr(t)) {
+  const optimizedSrc = useMemo(
+    () => (t && isSafeImageUrlForAttr(t) ? buildProductCardImageSrc(t, CATEGORY_ICON_MAX_PX) : null),
+    [t],
+  );
+
+  if (optimizedSrc) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={t}
-        alt=""
-        width={22}
-        height={22}
-        className="h-5 w-5 shrink-0 object-contain opacity-90"
-        loading="lazy"
-        decoding="async"
-      />
+      <span className="relative block h-5 w-5 shrink-0 [&_img]:!object-contain">
+        <Image
+          src={optimizedSrc}
+          alt=""
+          width={20}
+          height={20}
+          sizes={CATEGORY_ICON_IMAGE_SIZES}
+          className="box-border object-contain object-center opacity-90"
+          style={{ objectFit: "contain" }}
+          priority={priority}
+          fetchPriority={priority ? "high" : "low"}
+          placeholder={priority ? "blur" : "empty"}
+          blurDataURL={priority ? CategoryIconBlur : undefined}
+          decoding="async"
+        />
+      </span>
     );
   }
   return <Package className="h-5 w-5 shrink-0 text-gray-600" aria-hidden />;
-}
+});
 
 /** Parent section should expand when this parent matches categorySlug, optionally with a child. */
 function parentRowIsOpen(
@@ -60,10 +90,11 @@ export function ProductsCategoryAccordion({
         კატეგორიები
       </p> */}
       <div className="flex flex-col">
-        {parents.map((p) => (
+        {parents.map((p, parentIndex) => (
           <SidebarParent
             key={p.id}
             parent={p}
+            parentIndex={parentIndex}
             categorySlug={categorySlug}
             childSlug={childSlug}
             linkMode={linkMode}
@@ -74,17 +105,20 @@ export function ProductsCategoryAccordion({
   );
 }
 
-function SidebarParent({
+const SidebarParent = memo(function SidebarParent({
   parent,
+  parentIndex,
   categorySlug,
   childSlug,
   linkMode,
 }: {
   parent: CatalogCategoryParent;
+  parentIndex: number;
   categorySlug?: string;
   childSlug?: string;
   linkMode: "products" | "root";
 }) {
+  const glyphPriority = parentIndex < GLYPH_PRIORITY_PARENT_COUNT;
   const baseId = useId();
   const panelId = `${baseId}-subcategories`;
   const parentHref =
@@ -110,7 +144,7 @@ function SidebarParent({
           className={`flex items-center gap-3 py-3.5 pr-1 transition-colors hover:bg-transparent ${parentOnlyActive ? "bg-transparent" : ""
             }`}
         >
-          <CategoryGlyph iconUrl={parent.icon} />
+          <CategoryGlyph iconUrl={parent.icon} priority={glyphPriority} />
           <span className="flex-1 text-left text-sm font-medium text-gray-900">{parent.name}</span>
         </Link>
       </div>
@@ -128,7 +162,7 @@ function SidebarParent({
             showParentActiveStyle && "rounded-md bg-transparent px-1"
           )}
         >
-          <CategoryGlyph iconUrl={parent.icon} />
+          <CategoryGlyph iconUrl={parent.icon} priority={glyphPriority} />
           <span className="text-left text-sm font-normal text-[#333333] group-hover:text-[#ff5607]">{parent.name}</span>
         </Link>
         <button
@@ -188,4 +222,4 @@ function SidebarParent({
       </div>
     </div>
   );
-}
+});

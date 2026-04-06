@@ -1,6 +1,7 @@
 import { ProductsCatalogLayout } from "@/app/products/_components/products-catalog-layout";
+import { siteOrigin } from "@/lib/seo/site-origin";
 import type { ProductsListingResult } from "@/lib/supabase/products-listing";
-import type { ProductsListingLinkState } from "@/lib/utils/products-listing-url";
+import { toHref, type ProductsListingLinkState } from "@/lib/utils/products-listing-url";
 
 export type ProductsCatalogPageProps = {
   title: string;
@@ -19,6 +20,7 @@ export type ProductsCatalogPageProps = {
 /**
  * Shared catalog chrome: header, category sidebar, toolbar, grid, pagination.
  * Computes `totalPages` from `listing` so route pages stay thin.
+ * Emits CollectionPage JSON-LD for the current listing URL (filters, pagination).
  */
 export function ProductsCatalogPage({
   title,
@@ -31,18 +33,41 @@ export function ProductsCatalogPage({
   description,
 }: ProductsCatalogPageProps) {
   const totalPages = Math.max(1, Math.ceil(listing.total / listing.perPage));
+  const origin = siteOrigin();
+  const listingUrl = `${origin}${toHref(linkState)}`;
+  const desc = description?.trim();
+
+  const collectionPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    url: listingUrl,
+    numberOfItems: listing.total,
+    ...(desc ? { description: desc } : {}),
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Baba.ge",
+      url: origin,
+    },
+  };
 
   return (
-    <ProductsCatalogLayout
-      title={title}
-      listing={listing}
-      linkState={linkState}
-      priceBounds={priceBounds}
-      totalPages={totalPages}
-      categorySlug={categorySlug}
-      childSlug={childSlug}
-      sidebarLinkMode={sidebarLinkMode}
-      description={description}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }}
+      />
+      <ProductsCatalogLayout
+        title={title}
+        listing={listing}
+        linkState={linkState}
+        priceBounds={priceBounds}
+        totalPages={totalPages}
+        categorySlug={categorySlug}
+        childSlug={childSlug}
+        sidebarLinkMode={sidebarLinkMode}
+        description={description}
+      />
+    </>
   );
 }

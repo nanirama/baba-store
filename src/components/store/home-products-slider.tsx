@@ -117,6 +117,7 @@ function SliderTrack({
   const trackRef = useRef<HTMLDivElement>(null);
   const [cols, setCols] = useState(5); // ← matches SSR desktop default
   const [currentPage, setCurrentPage] = useState(0);
+  const [isMeasured, setIsMeasured] = useState(false);
 
   // Update cols on resize — no layout shift, just re-calc
   useEffect(() => {
@@ -125,6 +126,7 @@ function SliderTrack({
 
     const ro = new ResizeObserver(([entry]) => {
       setCols(getColsForWidth(entry.contentRect.width));
+      setIsMeasured(true);
     });
 
     ro.observe(track);
@@ -167,9 +169,6 @@ function SliderTrack({
     return () => track.removeEventListener("scroll", onScroll);
   }, [cols, totalPages]);
 
-  // card width as CSS calc — browser reserves exact space before images load = zero CLS
-  const cardWidthStyle = `calc((100% - ${GAP * (cols - 1)}px) / ${cols})`;
-
   return (
     <div className="relative">
       <ArrowBtn
@@ -200,9 +199,12 @@ function SliderTrack({
           <div
             key={product.id}
             role="listitem"
-            className="snap-start min-w-0"
-            // Keep each slide width deterministic for desktop + scroll math.
-            style={{ flex: `0 0 ${cardWidthStyle}` }}
+            className={cn(
+              "snap-start min-w-0",
+              // Keep widths deterministic with CSS breakpoints to avoid SSR->hydration reflow.
+              "basis-full sm:basis-[calc((100%-12px)/2)] md:basis-[calc((100%-24px)/3)] lg:basis-[calc((100%-48px)/5)]",
+            )}
+            style={{ flexShrink: 0 }}
           >
             <ProductCard
               product={product}
@@ -220,30 +222,32 @@ function SliderTrack({
       />
 
       {/* Dot indicators */}
-      {totalPages > 1 && (
-        <div
-          className="mt-4 flex justify-center gap-1.5"
-          role="tablist"
-          aria-label="Slide pages"
-        >
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              role="tab"
-              aria-label={`გვერდი ${i + 1}`}
-              aria-selected={i === currentPage}
-              onClick={() => goToPage(i)}
-              className={cn(
-                "rounded-full transition-all duration-200",
-                i === currentPage
-                  ? "h-1.5 w-4 bg-orange-500"
-                  : "h-1.5 w-1.5 bg-gray-300 hover:bg-gray-400",
-              )}
-            />
-          ))}
-        </div>
-      )}
+      <div className="mt-4 min-h-2">
+        {isMeasured && totalPages > 1 && (
+          <div
+            className="flex justify-center gap-1.5"
+            role="tablist"
+            aria-label="Slide pages"
+          >
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-label={`გვერდი ${i + 1}`}
+                aria-selected={i === currentPage}
+                onClick={() => goToPage(i)}
+                className={cn(
+                  "rounded-full transition-all duration-200",
+                  i === currentPage
+                    ? "h-1.5 w-4 bg-orange-500"
+                    : "h-1.5 w-1.5 bg-gray-300 hover:bg-gray-400",
+                )}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

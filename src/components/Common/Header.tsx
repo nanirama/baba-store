@@ -19,12 +19,13 @@ const CatalogMegaMenu = dynamic(
     ssr: true,
     loading: () => (
       <div
-        className="flex h-10 items-center gap-1.5 rounded-md py-2 text-primary/60"
+        className="flex h-10 min-w-[126px] items-center gap-1.5 rounded-md py-2 text-primary/60"
         aria-busy="true"
         aria-label="კატალოგის მენიუ იტვირთება"
       >
         <span className="h-5 w-5 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
-        <span className="h-4 w-16 shrink-0 animate-pulse rounded bg-muted sm:w-20" aria-hidden />
+        <span className="h-4 w-[74px] shrink-0 animate-pulse rounded bg-muted" aria-hidden />
+        <span className="h-4 w-4 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
       </div>
     ),
   },

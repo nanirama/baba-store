@@ -11,7 +11,7 @@ import {
 } from "@/lib/images/product-card-image";
 import type { ProductRecord } from "@/types/cms";
 
-function pickImageUrl(product: ProductRecord): string | null {
+export function pickProductRecordImageUrl(product: ProductRecord): string | null {
   return product.main_image ?? product.image1 ?? product.image2 ?? product.image3 ?? null;
 }
 
@@ -31,7 +31,7 @@ export function ProductCard({
   layout = "grid",
   sizes: sizesOverride,
 }: ProductCardProps) {
-  const rawSrc = pickImageUrl(product);
+  const rawSrc = pickProductRecordImageUrl(product);
   const href = `/products/${encodeURIComponent(product.slug)}`;
   const urlMaxPx = layout === "carousel" ? PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL : PRODUCT_CARD_IMAGE_MAX_PX;
   const optimizedSrc = rawSrc ? buildProductCardImageSrc(rawSrc, urlMaxPx) : null;

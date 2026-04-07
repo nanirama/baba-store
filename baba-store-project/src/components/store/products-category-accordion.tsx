@@ -124,7 +124,7 @@ const SidebarParent = memo(function SidebarParent({
   const parentHref =
     linkMode === "root"
       ? parentCategoryHref(parent.slug)
-      : `/${encodeURIComponent(parent.slug)}`;
+      : `/products/${encodeURIComponent(parent.slug)}`;
   const isOpenTarget = parentRowIsOpen(parent, categorySlug, childSlug);
 
   const [open, setOpen] = useState(isOpenTarget);
@@ -203,7 +203,7 @@ const SidebarParent = memo(function SidebarParent({
             const childHref =
               linkMode === "root"
                 ? childCategoryHref(parent.slug, c.slug)
-                : `/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
+                : `/products/${encodeURIComponent(parent.slug)}/${encodeURIComponent(c.slug)}`;
             const childActive = categorySlug === parent.slug && childSlug === c.slug;
             return (
               <li key={c.id}>

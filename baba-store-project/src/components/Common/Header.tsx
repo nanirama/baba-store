@@ -1,0 +1,196 @@
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import Link from "next/link";
+
+import { HeaderSearchForm } from "@/components/Common/HeaderSearchForm";
+import {
+  headerMobileScrollLinks,
+  headerTopCenterLink,
+  headerTopLeftLinks,
+  headerTopRightLinks,
+} from "@/components/Common/header-links";
+import { NEUTRAL_TILE_BLUR_DATA_URL } from "@/lib/images/product-image-url";
+import { getCatalogMenuTree } from "@/lib/supabase/categories";
+import type { CatalogCategoryParent } from "@/types/catalog-menu";
+
+const CatalogMegaMenu = dynamic(
+  () => import("@/components/Common/catalog-mega-menu").then((m) => ({ default: m.CatalogMegaMenu })),
+  {
+    ssr: true,
+    loading: () => (
+      <div
+        className="flex h-10 items-center gap-1.5 rounded-md py-2 text-primary/60"
+        aria-busy="true"
+        aria-label="კატალოგის მენიუ იტვირთება"
+      >
+        <span className="h-5 w-5 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
+        <span className="h-4 w-16 shrink-0 animate-pulse rounded bg-muted sm:w-20" aria-hidden />
+      </div>
+    ),
+  },
+);
+
+const TOP_BAR_CLASS =
+  "bg-[#05141f] text-[12px] leading-tight text-white/95 sm:text-[13px]";
+
+function TopBarLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="whitespace-nowrap underline-offset-2 transition-colors hover:text-white hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+    >
+      {label}
+    </Link>
+  );
+}
+
+/** Desktop: three-column utility row. Mobile: single horizontal scroll (keyboard-accessible). */
+function HeaderTopBar() {
+  return (
+    <>
+      <div className={`${TOP_BAR_CLASS} hidden lg:block`}>
+        <div className="mx-auto grid max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2.5 sm:px-6 lg:px-8">
+          <nav aria-label="სერვისები" className="justify-self-start">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              {headerTopLeftLinks.map((item) => (
+                <li key={item.href}>
+                  <TopBarLink href={item.href} label={item.label} />
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="flex flex-row gap-2 items-center justify-end">
+            <nav aria-label="კონფიდენციალურობა" className="justify-self-center px-2">
+              <TopBarLink href={headerTopCenterLink.href} label={headerTopCenterLink.label} />
+
+            </nav>
+            <nav aria-label="განვადება და მიწოდება" className="justify-self-end">
+              <ul className="flex flex-wrap justify-end gap-x-4 gap-y-1">
+                {headerTopRightLinks.map((item) => (
+                  <li key={item.href}>
+                    <TopBarLink href={item.href} label={item.label} />
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+          <Link
+            href="/contact"
+            className="flex justify-end focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            aria-label="კონტაქტი"
+            title="კონტაქტი"
+          >
+            <svg
+              width={24}
+              height={24}
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
+              <path
+                d="M21.0039 12C21.0039 16.9706 16.9745 21 12.0039 21C9.9675 21 3.00463 21 3.00463 21C3.00463 21 4.56382 17.2561 3.93982 16.0008C3.34076 14.7956 3.00391 13.4372 3.00391 12C3.00391 7.02944 7.03334 3 12.0039 3C16.9745 3 21.0039 7.02944 21.0039 12Z"
+                stroke="#F15A24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        </div>
+      </div>
+
+      <div
+        className={`${TOP_BAR_CLASS} lg:hidden`}
+        role="region"
+        aria-label="სწრაფი ბმულები"
+      >
+        <nav
+          className="mx-auto flex max-w-[1440px] snap-x snap-mandatory overflow-x-auto px-4 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden"
+          aria-label="სწრაფი ნავიგაცია"
+        >
+          <ul className="flex min-w-0 gap-x-4">
+            {headerMobileScrollLinks.map((item) => (
+              <li key={`${item.href}-${item.label}`} className="shrink-0 snap-start">
+                <TopBarLink href={item.href} label={item.label} />
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </>
+  );
+}
+
+async function loadCatalogParents(): Promise<CatalogCategoryParent[]> {
+  try {
+    return await getCatalogMenuTree();
+  } catch {
+    return [];
+  }
+}
+
+export async function Header() {
+  const catalogParents = await loadCatalogParents();
+
+  return (
+    <header id="site-header" className="sticky top-0 z-50 min-w-0 overflow-visible">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+      >
+        კონტენტზე გადასვლა
+      </a>
+      <HeaderTopBar />
+
+      <div className="overflow-visible border-b border-border/80 bg-white shadow-sm">
+        <div className="mx-auto max-w-[1440px] overflow-visible px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 flex-col gap-3 overflow-visible lg:flex-row lg:items-center lg:gap-6">
+            <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-4 lg:justify-start lg:gap-5">
+              <Link
+                href="/"
+                className="relative inline-flex shrink-0 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                aria-label="Baba.ge — მთავარი"
+              >
+                <Image
+                  src="/images/logo.webp"
+                  alt=""
+                  width={150}
+                  height={66}
+                  priority
+                  fetchPriority="high"
+                  placeholder="blur"
+                  blurDataURL={NEUTRAL_TILE_BLUR_DATA_URL}
+                  sizes="(max-width: 640px) 126px, (max-width: 1024px) 126px, 150px"
+                  className="h-[56px] w-auto"
+                />
+              </Link>
+              <nav
+                className="flex min-w-0 items-center gap-2 sm:gap-3"
+                aria-label="კატალოგი და ანგარიში"
+              >
+                <CatalogMegaMenu parents={catalogParents} />
+                <Link
+                  href="/auth/login"
+                  className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
+                >
+                  შესვლა
+                </Link>
+              </nav>
+            </div>
+
+            <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:gap-4">
+              <HeaderSearchForm />
+              {/* <Link
+                href="/auth/login"
+                className="hidden whitespace-nowrap rounded-full border border-primary/30 bg-primary/5 px-4 py-2 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:inline-flex"
+              >
+                შესვლა
+              </Link> */}
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}

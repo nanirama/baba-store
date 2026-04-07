@@ -1,7 +1,8 @@
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 
+import { CatalogMegaMenu } from "@/components/Common/catalog-mega-menu";
 import { HeaderSearchForm } from "@/components/Common/HeaderSearchForm";
 import {
   headerMobileScrollLinks,
@@ -13,23 +14,24 @@ import { NEUTRAL_TILE_BLUR_DATA_URL } from "@/lib/images/product-image-url";
 import { getCatalogMenuTree } from "@/lib/supabase/categories";
 import type { CatalogCategoryParent } from "@/types/catalog-menu";
 
-const CatalogMegaMenu = dynamic(
-  () => import("@/components/Common/catalog-mega-menu").then((m) => ({ default: m.CatalogMegaMenu })),
-  {
-    ssr: true,
-    loading: () => (
-      <div
-        className="flex h-10 min-w-[126px] items-center gap-1.5 rounded-md py-2 text-primary/60"
-        aria-busy="true"
-        aria-label="კატალოგის მენიუ იტვირთება"
-      >
-        <span className="h-5 w-5 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
-        <span className="h-4 w-[74px] shrink-0 animate-pulse rounded bg-muted" aria-hidden />
-        <span className="h-4 w-4 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
-      </div>
-    ),
-  },
-);
+function CatalogMegaMenuFallback() {
+  return (
+    <div
+      className="flex h-10 min-w-[126px] items-center gap-1.5 rounded-md py-2 text-primary/60"
+      aria-busy="true"
+      aria-label="კატალოგის მენიუ იტვირთება"
+    >
+      <span className="h-5 w-5 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
+      <span className="h-4 w-[74px] shrink-0 animate-pulse rounded bg-muted" aria-hidden />
+      <span className="h-4 w-4 shrink-0 animate-pulse rounded bg-muted" aria-hidden />
+    </div>
+  );
+}
+
+async function HeaderCatalogMegaMenu() {
+  const catalogParents = await loadCatalogParents();
+  return <CatalogMegaMenu parents={catalogParents} />;
+}
 
 const TOP_BAR_CLASS =
   "bg-[#05141f] text-[12px] leading-tight text-white/95 sm:text-[13px]";
@@ -131,9 +133,7 @@ async function loadCatalogParents(): Promise<CatalogCategoryParent[]> {
   }
 }
 
-export async function Header() {
-  const catalogParents = await loadCatalogParents();
-
+export function Header() {
   return (
     <header id="site-header" className="sticky top-0 z-50 min-w-0 overflow-visible">
       <a
@@ -158,6 +158,7 @@ export async function Header() {
                   alt=""
                   width={150}
                   height={66}
+                  unoptimized
                   priority
                   fetchPriority="high"
                   placeholder="blur"
@@ -170,7 +171,9 @@ export async function Header() {
                 className="flex min-w-0 items-center gap-2 sm:gap-3"
                 aria-label="კატალოგი და ანგარიში"
               >
-                <CatalogMegaMenu parents={catalogParents} />
+                <Suspense fallback={<CatalogMegaMenuFallback />}>
+                  <HeaderCatalogMegaMenu />
+                </Suspense>
                 <Link
                   href="/auth/login"
                   className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"

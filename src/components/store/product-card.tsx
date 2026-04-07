@@ -9,6 +9,7 @@ import {
   PRODUCT_CARD_SIZES_CAROUSEL,
   PRODUCT_CARD_SIZES_GRID,
 } from "@/lib/images/product-card-image";
+import { homeCarouselPriorityStillImageFields } from "@/lib/images/home-carousel-priority-image";
 import type { ProductRecord } from "@/types/cms";
 
 export function pickProductRecordImageUrl(product: ProductRecord): string | null {
@@ -45,22 +46,33 @@ export function ProductCard({
         href={href}
         className="flex min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 pb-4"
       >
-        <div className="relative aspect-square w-full shrink-0 bg-gray-50 [&_img]:!object-contain">
+        <div className="relative flex aspect-square w-full shrink-0 items-center justify-center bg-gray-50 [&_img]:!object-contain">
           {optimizedSrc ? (
-            <Image
-              src={optimizedSrc}
-              alt={title}
-              fill
-              sizes={sizes}
-              quality={priority ? 78 : 68}
-              priority={priority}
-              fetchPriority={priority ? "high" : "low"}
-              placeholder={layout === "carousel" && !priority ? "empty" : "blur"}
-              blurDataURL={layout === "carousel" && !priority ? undefined : blurDataURL}
-              decoding="async"
-              className="box-border object-contain object-center p-4"
-              style={{ objectFit: "contain" }}
-            />
+            priority && layout === "carousel" ? (
+              <Image
+                {...homeCarouselPriorityStillImageFields(optimizedSrc, title)}
+                placeholder="blur"
+                blurDataURL={blurDataURL}
+                decoding="async"
+                className="box-border h-full w-full object-contain object-center p-4"
+                style={{ objectFit: "contain" }}
+              />
+            ) : (
+              <Image
+                src={optimizedSrc}
+                alt={title}
+                fill
+                sizes={sizes}
+                quality={priority ? 78 : 68}
+                priority={priority}
+                fetchPriority={priority ? "high" : "low"}
+                placeholder={layout === "carousel" && !priority ? "empty" : "blur"}
+                blurDataURL={layout === "carousel" && !priority ? undefined : blurDataURL}
+                decoding="async"
+                className="box-border object-contain object-center p-4"
+                style={{ objectFit: "contain" }}
+              />
+            )
           ) : (
             <div
               className="flex h-full w-full items-center justify-center text-sm text-gray-400"

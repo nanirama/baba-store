@@ -5,11 +5,8 @@ import { HomePageCarousels } from "@/app/_components/home-page-carousels";
 import { BaseLayout } from "@/components/Common/BaseLayout";
 import { pickProductRecordImageUrl } from "@/components/store/product-card";
 import { Button } from "@/components/ui/button";
-import {
-  buildProductCardImageSrc,
-  PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL,
-  PRODUCT_CARD_SIZES_CAROUSEL,
-} from "@/lib/images/product-card-image";
+import { buildProductCardImageSrc, PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL } from "@/lib/images/product-card-image";
+import { homeCarouselPriorityStillImageFields } from "@/lib/images/home-carousel-priority-image";
 import { getProducts } from "@/lib/supabase/cms-queries";
 import { siteOrigin } from "@/lib/seo/site-origin";
 import type { ProductRecord } from "@/types/cms";
@@ -52,15 +49,9 @@ function HomeCarouselLcpPreload({
   const src = buildProductCardImageSrc(raw, PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL);
   if (!src) return null;
 
-  const { props } = getImageProps({
-    src,
-    alt: product.name.trim() || "პროდუქტი",
-    width: PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL,
-    height: PRODUCT_CARD_IMAGE_MAX_PX_CAROUSEL,
-    sizes: PRODUCT_CARD_SIZES_CAROUSEL,
-    quality: 78,
-    priority: true,
-  });
+  const { props } = getImageProps(
+    homeCarouselPriorityStillImageFields(src, product.name.trim() || "პროდუქტი"),
+  );
 
   const srcSet = "srcSet" in props && typeof props.srcSet === "string" ? props.srcSet : undefined;
   const sizesAttr = typeof props.sizes === "string" ? props.sizes : undefined;

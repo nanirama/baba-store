@@ -34,17 +34,17 @@ export function ProductDetailPromoSidebar({ className }: ProductDetailPromoSideb
     >
       <ul className="flex flex-col divide-y divide-dashed divide-[#3A4754]/80">
         {BLOCKS.map((block) => (
-          <li key={block.title} className="flex gap-3 py-2 first:pt-3 last:pb-3">
+          <li key={block.title} className="flex gap-2 py-1.5 first:pt-2 last:pb-2">
             <span
               className="mt-2 h-[1px] w-2 shrink-0 rounded-sm bg-primary"
               aria-hidden
             />
             <div className="min-w-0">
-              <p className="font-[family-name:var(--font-heading)] text-xs font-[600] tracking-tight text-primary">
+              <p className="font-[family-name:var(--font-heading)] text-xs font-[600] leading-tight tracking-tight text-primary">
                 {block.title}
               </p>
               {block.body ? (
-                <p className="text-xs leading-relaxed text-neutral-600">{block.body}</p>
+                <p className="text-xs leading-snug text-neutral-600">{block.body}</p>
               ) : null}
             </div>
           </li>

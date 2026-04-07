@@ -81,7 +81,7 @@ const nextConfig: NextConfig = {
     ],
     /** Prod: Next image optimizer (AVIF/WebP, responsive). Dev: raw URLs to avoid dev caching quirks. */
     unoptimized: !isProd,
-    minimumCacheTTL: 60 * 60 * 24,
+    minimumCacheTTL: isProd ? 60 * 60 * 24 : 0,
   },
   experimental: {
     useCache: true,
@@ -125,44 +125,44 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
-          // ✅ Production cache headers with compression
+      // ✅ Production cache headers with compression
+      {
+        source: "/(.*)",
+        headers: [
           {
-            source: "/fonts/(.*)",
-            headers: [
-              {
-                key: "Cache-Control",
-                value: "public, max-age=31536000, immutable",
-              },
-            ],
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600",
           },
+        ],
+      },
+      {
+        source: "/fonts/(.*)",
+        headers: [
           {
-            source: "/images/(.*)",
-            headers: [
-              {
-                key: "Cache-Control",
-                value: "public, max-age=31536000, immutable",
-              },
-            ],
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
+        ],
+      },
+      {
+        source: "/images/(.*)",
+        headers: [
           {
-            source: "/_next/static/(.*)",
-            headers: [
-              {
-                key: "Cache-Control",
-                value: "public, max-age=31536000, immutable",
-              },
-            ],
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
+        ],
+      },
+      {
+        source: "/_next/static/(.*)",
+        headers: [
           {
-            source: "/(.*)",
-            headers: [
-              {
-                key: "Cache-Control",
-                value: "public, max-age=3600, s-maxage=3600",
-              },
-            ],
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
-        ];
+        ],
+      },
+    ];
   },
 };
 

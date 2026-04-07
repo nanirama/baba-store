@@ -59,8 +59,8 @@
 
 @media (min-width: 640px) {
   .products-slider-root .products-slider-arrow {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2rem;
+    height: 2rem;
   }
 }
 

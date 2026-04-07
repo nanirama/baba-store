@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import type { CustomArrowProps } from "react-slick";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -25,7 +25,7 @@ function ProductsSliderPrev({ className, style, onClick }: CustomArrowProps) {
       onClick={onClick}
       aria-label="წინა სლაიდი"
     >
-      <ChevronLeft className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+      <ChevronLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
     </button>
   );
 }
@@ -42,7 +42,7 @@ function ProductsSliderNext({ className, style, onClick }: CustomArrowProps) {
       onClick={onClick}
       aria-label="შემდეგი სლაიდი"
     >
-      <ChevronRight className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+      <ChevronRight className="h-4 w-4" strokeWidth={2.25} aria-hidden />
     </button>
   );
 }
@@ -77,14 +77,21 @@ export type ProductsSliderProps = {
   prioritySlideCount?: number;
 };
 
-/** Max widths per react-slick tier so ranges match Tailwind default / sm / md / lg. */
-const SLIDER_BREAKPOINT_MAX = {
-  mobile: 639,
-  sm: 767,
-  md: 1023,
-} as const;
-
 const DESKTOP_SLIDES = 5;
+
+/**
+ * react-slick builds (max-width) bands from sorted breakpoints:
+ * - first band: 0 … breakpoint₀
+ * - next: breakpoint₀+1 … breakpoint₁
+ * - after last band, `minWidth: lastBreakpoint+1` clears to `breakpoint: null` (uses top-level props).
+ * We keep `slidesToShow={1}` so SSR / `breakpoint: null` never paints 5-wide rows on phones,
+ * and use a huge sentinel so normal desktop widths stay in the “5-up” band instead of null.
+ */
+const BP_MOBILE_MAX = 639;
+const BP_SM = 767;
+const BP_MD = 1023;
+/** Wider than any real device; last tier stays `slidesToShow: 5` instead of falling through to null. */
+const BP_DESKTOP_SENTINEL = 99999;
 
 export function ProductsSlider({
   heading,
@@ -94,10 +101,68 @@ export function ProductsSlider({
   contentClassName,
   prioritySlideCount = 0,
 }: ProductsSliderProps) {
-  const cap = (n: number) => Math.min(n, products.length);
-  const canInfinite = products.length > Math.min(DESKTOP_SLIDES, products.length);
+  const canInfinite = products.length > 1;
+  const [isMounted, setIsMounted] = useState(false);
 
   if (products.length === 0) return null;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const settings = {
+    dots: true,
+    arrows: true,
+    prevArrow: <ProductsSliderPrev />,
+    nextArrow: <ProductsSliderNext />,
+    customPaging: (i: number) => (
+      <button type="button" aria-label={`სლაიდი ${i + 1}`} />
+    ),
+    infinite: canInfinite,
+    speed: 380,
+    slidesToShow: 5,
+    slidesToScroll: 5,
+    swipe: true,
+    touchMove: true,
+    accessibility: true,
+    responsive: [
+      {
+        breakpoint: 1920,
+        settings: {
+          slidesToShow: 5,
+          slidesToScroll: 5,
+        },
+      },
+      {
+        breakpoint: BP_DESKTOP_SENTINEL,
+        settings: {
+          slidesToShow: 5,
+          slidesToScroll: 5,
+        },
+      },
+      {
+        breakpoint: BP_MD,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 3,
+        },
+      },
+      {
+        breakpoint: BP_SM,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: BP_MOBILE_MAX,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+    ],
+  };
 
   return (
     <section
@@ -116,46 +181,28 @@ export function ProductsSlider({
         </h2>
 
         <div className="products-slider-root min-w-0 home_slider">
-          <Slider
-            dots
-            arrows
-            prevArrow={<ProductsSliderPrev />}
-            nextArrow={<ProductsSliderNext />}
-            customPaging={(i) => (
-              <button type="button" aria-label={`სლაიდი ${i + 1}`} />
-            )}
-            infinite={canInfinite}
-            speed={380}
-            slidesToShow={cap(DESKTOP_SLIDES)}
-            slidesToScroll={1}
-            swipe
-            touchMove
-            accessibility
-            responsive={[
-              {
-                breakpoint: SLIDER_BREAKPOINT_MAX.mobile,
-                settings: { slidesToShow: cap(1), slidesToScroll: 1 },
-              },
-              {
-                breakpoint: SLIDER_BREAKPOINT_MAX.sm,
-                settings: { slidesToShow: cap(2), slidesToScroll: 1 },
-              },
-              {
-                breakpoint: SLIDER_BREAKPOINT_MAX.md,
-                settings: { slidesToShow: cap(3), slidesToScroll: 1 },
-              },
-            ]}
-          >
-            {products.map((product, index) => (
-              <HomeProductSlide
-                key={product.id}
-                product={product}
-                priority={index < prioritySlideCount}
+          {isMounted ? (
+            <Slider {...settings}>
+              {products.map((product, index) => (
+                <HomeProductSlide
+                  key={product.id}
+                  product={product}
+                  priority={index < prioritySlideCount}
+                />
+              ))}
+            </Slider>
+          ) : (
+            <div className="px-1.5 sm:px-2">
+              <ProductCard
+                product={products[0]}
+                layout="carousel"
+                priority={prioritySlideCount > 0}
               />
-            ))}
-          </Slider>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
+

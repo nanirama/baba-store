@@ -4,7 +4,7 @@ import { Footer } from "@/components/Common/Footer";
 import { Header } from "@/components/Common/Header";
 
 type BaseLayoutProps = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 function FooterFallback() {

@@ -89,7 +89,10 @@ function FooterBottomStrip() {
               </ul>
             </nav>
 
-            <p className="mt-auto pt-2 text-xs leading-relaxed text-slate-500">
+            <p
+              className="mt-auto pt-2 text-xs leading-relaxed text-slate-500"
+              suppressHydrationWarning
+            >
               Copyright © {new Date().getFullYear()} Baba.ge. ყველა უფლება დაცულია.
             </p>
           </div>

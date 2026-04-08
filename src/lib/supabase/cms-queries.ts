@@ -1,10 +1,14 @@
 import "server-only";
 
+import { cacheLife, cacheTag } from "next/cache";
+
 import { createAdminClient } from "@/lib/supabase/server";
 import type { CategoryRecord, ProductRecord } from "@/types/cms";
 
 /** PostgREST default `max-rows` is 1000; fetch in pages to load the full table. */
 const PRODUCTS_PAGE_SIZE = 1000;
+const HOME_PRODUCTS_WINDOW = 240;
+const HOME_BUCKET_LIMIT = 24;
 
 export async function getProducts(): Promise<ProductRecord[]> {
   const supabase = createAdminClient();
@@ -27,6 +31,72 @@ export async function getProducts(): Promise<ProductRecord[]> {
   }
 
   return all;
+}
+
+/**
+ * Homepage-only fast path: fetch a bounded recent window instead of full table scan.
+ * Keeps request latency predictable even when product table grows large.
+ */
+export async function getProductsForHome(limit = HOME_PRODUCTS_WINDOW): Promise<ProductRecord[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("products");
+  cacheTag("products-home");
+
+  const supabase = createAdminClient();
+  const safeLimit = Math.max(1, Math.min(limit, HOME_PRODUCTS_WINDOW));
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(safeLimit);
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ProductRecord[];
+}
+
+/**
+ * Homepage buckets queried directly by flags.
+ * Avoids empty sections when the recent-window strategy doesn't contain flagged items.
+ */
+export async function getHomeProductBuckets(limit = HOME_BUCKET_LIMIT): Promise<{
+  promotionProducts: ProductRecord[];
+  bestSellerProducts: ProductRecord[];
+  discountProducts: ProductRecord[];
+}> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("products");
+  cacheTag("products-home");
+
+  const supabase = createAdminClient();
+  const safeLimit = Math.max(1, Math.min(limit, 60));
+
+  const base = () =>
+    supabase
+      .from("products")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(safeLimit);
+
+  const [promotionsRes, bestsellersRes, discountsRes] = await Promise.all([
+    base().eq("promotions", true),
+    base().eq("bestsellers", true),
+    base().eq("discounts", true),
+  ]);
+
+  if (promotionsRes.error) throw new Error(promotionsRes.error.message);
+  if (bestsellersRes.error) throw new Error(bestsellersRes.error.message);
+  if (discountsRes.error) throw new Error(discountsRes.error.message);
+
+  return {
+    promotionProducts: (promotionsRes.data ?? []) as ProductRecord[],
+    bestSellerProducts: (bestsellersRes.data ?? []) as ProductRecord[],
+    discountProducts: (discountsRes.data ?? []) as ProductRecord[],
+  };
 }
 
 /** Slugs for `/products/[slug]` — indexed, lightweight, paginated (same row cap as `getProducts`). */

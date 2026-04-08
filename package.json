@@ -1,69 +1,69 @@
 {
-  "name": "nextjs-supabase-auth",
-  "version": "0.1.0",
-  "private": true,
-  "browserslist": {
-    "production": [
-      "chrome >= 109",
-      "edge >= 109",
-      "firefox >= 115",
-      "safari >= 16.4",
-      "ios_saf >= 16.4"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "scripts": {
-    "dev": "next dev --turbopack --port 3033",
-    "build": "next build",
-    "analyze": "cross-env ANALYZE=true TURBOPACK= next build --webpack && node scripts/print-bundle-report-paths.mjs",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@auth/core": "^0.37.2",
-    "@hookform/resolvers": "^3.9.1",
-    "@radix-ui/react-label": "^2.1.1",
-    "@radix-ui/react-slot": "^1.1.1",
-    "@supabase/supabase-js": "^2.47.0",
-    "@tiptap/extension-image": "^3.20.5",
-    "@tiptap/extension-link": "^3.20.5",
-    "@tiptap/react": "^3.20.5",
-    "@tiptap/starter-kit": "^3.20.5",
-    "bcryptjs": "^2.4.3",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.468.0",
-    "next": "^16.2.2",
-    "next-auth": "^5.0.0-beta.25",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-hook-form": "^7.54.2",
-    "react-slick": "^0.31.0",
-    "sanitize-html": "^2.17.2",
-    "server-only": "^0.0.1",
-    "slick-carousel": "^1.8.1",
-    "tailwind-merge": "^2.5.5",
-    "xlsx": "^0.18.5",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.2",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^22.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@types/react-slick": "^0.23.13",
-    "@types/sanitize-html": "^2.16.1",
-    "autoprefixer": "^10.4.20",
-    "cross-env": "^7.0.3",
-    "eslint": "^9.16.0",
-    "eslint-config-next": "^16.2.2",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2"
+    "name": "nextjs-supabase-auth",
+    "version": "0.1.0",
+    "private": true,
+    "browserslist": {
+      "production": [
+        "chrome >= 109",
+        "edge >= 109",
+        "firefox >= 115",
+        "safari >= 16.4",
+        "ios_saf >= 16.4"
+      ],
+      "development": [
+        "last 1 chrome version",
+        "last 1 firefox version",
+        "last 1 safari version"
+      ]
+    },
+    "scripts": {
+      "dev": "next dev --turbopack --port 3033",
+      "build": "next build",
+      "analyze": "cross-env ANALYZE=true TURBOPACK= next build --webpack && node scripts/print-bundle-report-paths.mjs",
+      "start": "next start",
+      "lint": "next lint"
+    },
+    "dependencies": {
+      "@auth/core": "^0.37.2",
+      "@hookform/resolvers": "^3.9.1",
+      "@radix-ui/react-label": "^2.1.1",
+      "@radix-ui/react-slot": "^1.1.1",
+      "@supabase/supabase-js": "^2.47.0",
+      "@tiptap/extension-image": "^3.20.5",
+      "@tiptap/extension-link": "^3.20.5",
+      "@tiptap/react": "^3.20.5",
+      "@tiptap/starter-kit": "^3.20.5",
+      "bcryptjs": "^2.4.3",
+      "class-variance-authority": "^0.7.1",
+      "clsx": "^2.1.1",
+      "lucide-react": "^0.468.0",
+      "next": "^16.2.2",
+      "next-auth": "^5.0.0-beta.25",
+      "react": "^19.2.4",
+      "react-dom": "^19.2.4",
+      "react-hook-form": "^7.54.2",
+      "react-slick": "^0.31.0",
+      "sanitize-html": "^2.17.2",
+      "server-only": "^0.0.1",
+      "slick-carousel": "^1.8.1",
+      "tailwind-merge": "^2.5.5",
+      "xlsx": "^0.18.5",
+      "zod": "^3.23.8"
+    },
+    "devDependencies": {
+      "@next/bundle-analyzer": "^16.2.2",
+      "@types/bcryptjs": "^2.4.6",
+      "@types/node": "^22.0.0",
+      "@types/react": "^19.0.0",
+      "@types/react-dom": "^19.0.0",
+      "@types/react-slick": "^0.23.13",
+      "@types/sanitize-html": "^2.16.1",
+      "autoprefixer": "^10.4.20",
+      "cross-env": "^7.0.3",
+      "eslint": "^9.16.0",
+      "eslint-config-next": "^16.2.2",
+      "postcss": "^8.4.49",
+      "tailwindcss": "^3.4.17",
+      "typescript": "^5.7.2"
+    }
   }
-}

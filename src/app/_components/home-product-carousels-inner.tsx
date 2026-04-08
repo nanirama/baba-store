@@ -24,12 +24,14 @@ export function HomeProductCarouselsInner({
 
   return (
     <>
-      <ProductsSlider
-        heading="აქციები  "
-        ariaLabel="Promotions products"
-        products={promotionProducts}
-        prioritySlideCount={prioritySlideCountFor(promotionProducts)}
-      />
+      <div className="h-[600px] mb-10 border-b border-gray-200 overflow-hidden">
+        <ProductsSlider
+          heading="აქციები  "
+          ariaLabel="Promotions products"
+          products={promotionProducts}
+          prioritySlideCount={prioritySlideCountFor(promotionProducts)}
+        />
+      </div>
       <ProductsSlider
         heading="ბესტსელერები"
         ariaLabel="Bestsellers products"

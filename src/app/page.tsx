@@ -121,7 +121,9 @@ export default async function RootPage() {
               </svg>
             </Link>
           </Button>
-          <CardSlider />
+          <div className="h-[600px]">
+            <CardSlider />
+          </div>
           <HomePageCarousels
             promotionProducts={promotionProducts}
             bestSellerProducts={bestSellerProducts}

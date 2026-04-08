@@ -11,6 +11,7 @@ import { getProducts } from "@/lib/supabase/cms-queries";
 import { siteOrigin } from "@/lib/seo/site-origin";
 import type { ProductRecord } from "@/types/cms";
 import { parseTriStateBoolean } from "@/utils/tri-state-boolean";
+import CardSlider from "@/components/CardSlider";
 
 /** Supabase server client uses `cache: "no-store"` fetches — static prerender would conflict at build time. */
 export const dynamic = "force-dynamic";
@@ -120,6 +121,7 @@ export default async function RootPage() {
               </svg>
             </Link>
           </Button>
+          <CardSlider />
           <HomePageCarousels
             promotionProducts={promotionProducts}
             bestSellerProducts={bestSellerProducts}

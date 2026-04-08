@@ -125,6 +125,9 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
 
   async headers() {
+    // Avoid aggressive browser chunk caching in dev; it can cause stale Turbopack module errors.
+    if (!isProd) return [];
+
     return [
       // ✅ Production cache headers with compression
       {

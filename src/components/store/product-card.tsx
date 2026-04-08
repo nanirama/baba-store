@@ -26,6 +26,14 @@ export type ProductCardProps = {
   sizes?: string;
 };
 
+function formatProductPrice(price: number | null | undefined): string | null {
+  if (typeof price !== "number" || !Number.isFinite(price)) return null;
+  return ` ₾ ${new Intl.NumberFormat("ka-GE", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price)}`;
+}
+
 export function ProductCard({
   product,
   priority = false,
@@ -39,6 +47,7 @@ export function ProductCard({
   const blurDataURL = productCardBlurDataUrl(product.main_image_blur_data_url);
   const sizes = sizesOverride ?? (layout === "carousel" ? PRODUCT_CARD_SIZES_CAROUSEL : PRODUCT_CARD_SIZES_GRID);
   const title = product.name.trim() || "პროდუქტი";
+  const priceLabel = formatProductPrice(product.price);
 
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
@@ -82,9 +91,14 @@ export function ProductCard({
             </div>
           )}
         </div>
-        <h3 className="line-clamp-1 px-4 pb-4 pt-2 text-left text-xs font-medium leading-snug text-gray-900">
+        <h3 className="line-clamp-1 px-4 pt-2 text-left text-xs font-medium leading-snug text-gray-900">
           {title}
         </h3>
+        <div className="mt-auto px-4 pt-1 text-left">
+          <p className="text-sm font-semibold leading-tight text-primary">
+            {priceLabel ?? "ფასი შეთანხმებით"}
+          </p>
+        </div>
       </Link>
     </article>
   );

@@ -3,7 +3,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/server";
-import type { CategoryRecord, ProductRecord } from "@/types/cms";
+import type { CategoryRecord, OrderRecord, ProductRecord } from "@/types/cms";
 
 /** PostgREST default `max-rows` is 1000; fetch in pages to load the full table. */
 const PRODUCTS_PAGE_SIZE = 1000;
@@ -181,6 +181,52 @@ export async function getCategories(): Promise<CategoryRecord[]> {
 
   if (error) throw new Error(error.message);
   return (data ?? []) as CategoryRecord[];
+}
+
+export async function getOrders(): Promise<OrderRecord[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as OrderRecord[];
+}
+
+export async function getOrdersPage(args: {
+  page: number;
+  perPage: number;
+}): Promise<{ items: OrderRecord[]; total: number }> {
+  const page = Math.max(1, Math.floor(args.page || 1));
+  const perPage = Math.max(1, Math.min(200, Math.floor(args.perPage || 25)));
+  const from = (page - 1) * perPage;
+  const to = from + perPage - 1;
+
+  const supabase = createAdminClient();
+  const { data, error, count } = await supabase
+    .from("orders")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(from, to);
+  if (error) throw new Error(error.message);
+
+  return {
+    items: (data ?? []) as OrderRecord[],
+    total: count ?? 0,
+  };
+}
+
+export async function getOrderById(id: string): Promise<OrderRecord | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as OrderRecord | null;
 }
 
 export async function getCategoryById(id: string): Promise<CategoryRecord | null> {

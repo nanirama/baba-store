@@ -5,8 +5,17 @@ import { ProductDetailPromoSidebar } from "@/components/store/product-detail-pro
 import { ProductTipTapContent } from "@/components/store/product-tip-tap-content";
 import { getSeeAlsoProducts } from "@/lib/supabase/cms-queries";
 import type { ProductRecord } from "@/types/cms";
+import { OrderForm } from "@/app/products/_components/order-form";
 import { ProductDetailSeeAlsoClient } from "./product-detail-see-also-client";
 import { ProductImages } from "./product-images";
+
+function formatProductPrice(price: number | null | undefined): string | null {
+  if (typeof price !== "number" || !Number.isFinite(price)) return null;
+  return ` ₾ ${new Intl.NumberFormat("ka-GE", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(price)}`;
+}
 
 function SeeAlsoSectionShell({ children }: { children: ReactNode }) {
   return (
@@ -45,6 +54,7 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
 
   const hasDescription =
     Array.isArray(product.description?.content) && product.description.content.length > 0;
+  const priceLabel = formatProductPrice(product.price);
 
   return (
     <BaseLayout>
@@ -84,6 +94,9 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
                 </div>
                 <div className="min-w-0 p-4">
                   <div className="flex flex-col space-y-5">
+                    <p className="text-xl font-bold leading-tight text-primary">
+                      {priceLabel ?? "ფასი შეთანხმებით"}
+                    </p>
                     {product.model || product.sku ? (
                       <ul className="mb-4 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-neutral-800 marker:text-neutral-800">
                         {product.model ? (
@@ -101,6 +114,7 @@ export async function ProductDetailView({ product }: { product: ProductRecord })
                       </ul>
                     ) : null}
                   </div>
+                  <OrderForm productName={product.name} productSku={product.sku} />
                   {hasDescription ? (
                     <div className="border-t border-neutral-200 pt-5">
                       <ProductTipTapContent description={product.description} />

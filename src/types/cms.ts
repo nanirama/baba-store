@@ -1,5 +1,16 @@
 export type ProductStatus = "draft" | "active" | "archived";
 export type CategoryStatus = string;
+export type OrderRecord = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  address: string;
+  product_name: string | null;
+  product_sku: string | null;
+  created_at: string | null;
+  email: string | null;
+};
 
 export type ProductMeta = {
   title?: string;

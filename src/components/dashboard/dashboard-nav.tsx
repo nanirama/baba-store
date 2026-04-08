@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderTree, LayoutDashboard, Package, Upload } from "lucide-react";
+import { ClipboardList, FolderTree, LayoutDashboard, Package, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items: {
@@ -34,6 +34,12 @@ const items: {
     label: "Categories",
     icon: FolderTree,
     isActive: (p) => p.startsWith("/dashboard/categories"),
+  },
+  {
+    href: "/dashboard/orders",
+    label: "Orders",
+    icon: ClipboardList,
+    isActive: (p) => p.startsWith("/dashboard/orders"),
   },
 ];
 

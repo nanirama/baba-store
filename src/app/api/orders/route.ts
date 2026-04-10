@@ -6,17 +6,10 @@ type OrderPayload = {
   first_name: string;
   last_name: string;
   phone: string;
-  email: string;
   address: string;
   product_name: string;
   product_sku: string;
 };
-
-
-
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,14 +19,9 @@ export async function POST(request: NextRequest) {
       !payload.first_name?.trim() ||
       !payload.last_name?.trim() ||
       !payload.phone?.trim() ||
-      !payload.email?.trim() ||
       !payload.address?.trim()
     ) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    if (!isValidEmail(payload.email)) {
-      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }
 
     const supabase = createAdminClient();

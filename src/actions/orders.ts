@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { requireRole } from "@/lib/auth/helpers";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -31,4 +32,13 @@ export async function deleteOrderFormAction(
   _formData: FormData,
 ): Promise<void> {
   await deleteOrderAction(orderId);
+}
+
+export async function deleteOrderAndRedirectFormAction(
+  orderId: string,
+  _formData: FormData,
+): Promise<void> {
+  const result = await deleteOrderAction(orderId);
+  if (!result.success) return;
+  redirect("/dashboard/orders");
 }

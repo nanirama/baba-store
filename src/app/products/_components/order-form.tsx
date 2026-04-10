@@ -11,18 +11,18 @@ type FormData = {
   firstName: string;
   lastName: string;
   phone: string;
-  email: string;
   address: string;
   product_name: string;
   product_sku: string;
 };
 
 export function OrderForm({ productName, productSku }: OrderFormProps) {
+  const receiverEmail = process.env.NEXT_PUBLIC_RECEIVER_EMAIL?.trim();
+
   const initialValues: FormData = {
     firstName: "",
     lastName: "",
     phone: "",
-    email: "",
     address: "",
     product_name: productName,
     product_sku: productSku ?? "",
@@ -39,16 +39,10 @@ export function OrderForm({ productName, productSku }: OrderFormProps) {
     first_name: data.firstName,
     last_name: data.lastName,
     phone: data.phone,
-    email: data.email,
     address: data.address,
     product_name: product_name,
     product_sku: product_sku,
   });
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
   const validateForm = (data: FormData) => {
     const nextErrors: Record<string, string> = {};
@@ -57,20 +51,22 @@ export function OrderForm({ productName, productSku }: OrderFormProps) {
     if (!data.phone.trim() || data.phone.trim().length < 5) {
       nextErrors.phone = "ეს ველი საჭიროა";
     }
-    if (!data.email.trim() || !validateEmail(data.email)) {
-      nextErrors.email = "გთხოვთ შეიყვანოთ სწორი ელ. ფოსტა";
-    }
     if (!data.address.trim()) nextErrors.address = "ეს ველი საჭიროა";
     return { valid: Object.keys(nextErrors).length === 0, errors: nextErrors };
   };
 
   const sendEmail = async (payload: FormData) => {
+    if (!receiverEmail) {
+      console.error("NEXT_PUBLIC_RECEIVER_EMAIL is not configured");
+      return;
+    }
+
     try {
       await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: payload.email,
+          email: receiverEmail,
           params: {
             name: `${payload.firstName} ${payload.lastName}`.trim(),
             phone: payload.phone,
@@ -96,7 +92,7 @@ export function OrderForm({ productName, productSku }: OrderFormProps) {
     }
   };
 
-  const handleSubmit = async (dataOverride?: FormData) => {
+  const handleSubmit = async () => {
     console.log('handleSubmit');
     const payload = formData;
     const validation = validateForm(payload);
@@ -177,19 +173,6 @@ export function OrderForm({ productName, productSku }: OrderFormProps) {
             placeholder="გვარი"
           />
           {errors.lastName ? <p className="mt-1 text-xs text-red-600">{errors.lastName}</p> : null}
-        </div>
-
-        <div className="sm:col-span-2">
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => updateFormData("email", e.target.value)}
-            className={`h-10 w-full rounded-md border px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 ${
-              errors.email ? "border-red-500" : "border-neutral-300"
-            }`}
-            placeholder="ელ. ფოსტა"
-          />
-          {errors.email ? <p className="mt-1 text-xs text-red-600">{errors.email}</p> : null}
         </div>
 
         <div className="sm:col-span-2">

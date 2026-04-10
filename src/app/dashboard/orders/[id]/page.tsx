@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
 
-import { deleteOrderFormAction } from "@/actions/orders";
+import { deleteOrderAndRedirectFormAction } from "@/actions/orders";
 import { requireRole } from "@/lib/auth/helpers";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { getOrderById } from "@/lib/supabase/cms-queries";
@@ -64,7 +64,7 @@ export default async function OrderViewPage({
         </dl>
 
         <div className="mt-6 flex items-center gap-2">
-          <form action={deleteOrderFormAction.bind(null, order.id)}>
+          <form action={deleteOrderAndRedirectFormAction.bind(null, order.id)}>
             <button
               type="submit"
               className="inline-flex items-center gap-2 rounded-md bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-600"
